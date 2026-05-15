@@ -92,6 +92,7 @@ class SuggestRequest(BaseModel):
     tools: str
     method: str
     notes: str = ""
+    locale: str = "en"
 
 class DetailRequest(BaseModel):
     name: str
@@ -99,6 +100,7 @@ class DetailRequest(BaseModel):
     tools: str
     method: str
     notes: str = ""
+    locale: str = "en"
 
 class SaveRecipeRequest(BaseModel):
     name: str
@@ -116,6 +118,7 @@ class ChatRequest(BaseModel):
     message: str
     context: dict = {}
     history: list = []
+    locale: str = "en"
 
 # ── Endpoints ──
 
@@ -129,13 +132,15 @@ FALLBACK_SUGGESTIONS = [
 
 @app.post("/suggest")
 async def suggest_recipes(req: SuggestRequest):
+    lang = "Thai" if req.locale == "th" else "English"
     prompt = f"""Kitchen ingredients: {req.ingredients}
 Available tools/equipment: {req.tools}
 Preferred cooking method: {req.method}
 Additional notes: {req.notes}
 
-Suggest recipes that work with the available equipment."""
-    system = """You are Bingus Chef, a realistic home cook. Recommend ONLY dishes that can ACTUALLY BE MADE with the user's available tools and ingredients.
+Suggest recipes that work with the available equipment.
+Respond in {lang}. All text — names, descriptions, ingredient names, and missing items — must be in {lang}."""
+    system = f"""You are Bingus Chef, a realistic home cook. Recommend ONLY dishes that can ACTUALLY BE MADE with the user's available tools and ingredients.
 
 TOOL-FIRST RULES (MOST IMPORTANT):
 - Analyze tools FIRST. Only pan + stove → stir-fry, deep-fry, fried rice.
@@ -150,11 +155,13 @@ INGREDIENT RULES:
 - Base on ingredients user has. Simple ingredients = simple dishes.
 - "missing" = minimal extra ingredients needed. Keep it short.
 
+CRITICAL: Respond in {lang}. All text (names, descriptions, ingredient names, missing items) must be in {lang}.
+
 OUTPUT: up to 5 suggestions, can be fewer if tools limited.
 Output ONLY valid JSON. No markdown, no code blocks.
-{"suggestions": [
-  {"name": "Stir-fried Basil Chicken", "calories": 350, "description": "200g chicken, garlic, chili, basil, seasoning sauce", "emoji": "🍳", "ingredients": ["Chicken", "Garlic", "Chili", "Basil", "Seasoning sauce", "Fish sauce", "Sugar"], "missing": ["Basil"]}
-]}"""
+{{"suggestions": [
+  {{"name": "Stir-fried Basil Chicken", "calories": 350, "description": "200g chicken, garlic, chili, basil, seasoning sauce", "emoji": "🍳", "ingredients": ["Chicken", "Garlic", "Chili", "Basil", "Seasoning sauce", "Fish sauce", "Sugar"], "missing": ["Basil"]}}
+]}}"""
     try:
         res = client.chat.completions.create(
             model="typhoon-v2.5-30b-a3b-instruct",
@@ -171,14 +178,16 @@ Output ONLY valid JSON. No markdown, no code blocks.
 
 @app.post("/detail")
 async def get_recipe_detail(req: DetailRequest):
+    lang = "Thai" if req.locale == "th" else "English"
     prompt = f"""Recipe: {req.name}
 Available ingredients: {req.ingredients}
 Available tools: {req.tools}
 Cooking method: {req.method}
 Notes: {req.notes}
 
-Give a detailed recipe that actually works."""
-    system = """You are Bingus Chef, a realistic home cook. Give a detailed recipe that ACTUALLY WORKS in a real kitchen.
+Give a detailed recipe that actually works.
+Respond in {lang}. All text — ingredient names, step descriptions, and everything else — must be in {lang}."""
+    system = f"""You are Bingus Chef, a realistic home cook. Give a detailed recipe that ACTUALLY WORKS in a real kitchen.
 
 REALISM RULES:
 - Only include ingredients and steps that make sense for this specific dish. No random extras.
@@ -193,24 +202,26 @@ REALISM RULES:
 - nutrition = realistic values for this dish
 - missing_ingredients = what user needs to buy, keep it real
 
+CRITICAL: Respond in {lang}. All text (ingredient names, step descriptions, everything) must be in {lang}.
+
 Output ONLY valid JSON. No markdown, no code blocks.
-{
+{{
   "name": "Stir-fried Basil Chicken",
   "description": "Stir-fried basil chicken with 200g chicken, garlic, chili, basil, seasoning sauce",
-  "nutrition": {"protein": 28, "carbs": 10, "fat": 22, "fiber": 2, "calories": 350},
+  "nutrition": {{"protein": 28, "carbs": 10, "fat": 22, "fiber": 2, "calories": 350}},
   "ingredients": ["200g chicken thigh", "5 cloves garlic", "3-4 bird chilies", "1 cup basil leaves", "1 tbsp fish sauce", "1 tbsp soy sauce", "1/2 tsp sugar", "1 tbsp oil"],
   "prep_steps": [
-    {"text": "Slice 200g chicken into bite-sized pieces", "timer": 0},
-    {"text": "Pound 5 garlic cloves + 3-4 chilies", "timer": 0}
+    {{"text": "Slice 200g chicken into bite-sized pieces", "timer": 0}},
+    {{"text": "Pound 5 garlic cloves + 3-4 chilies", "timer": 0}}
   ],
   "cook_steps": [
-    {"text": "Heat pan with 1 tbsp oil, fry garlic and chili until fragrant", "timer": 0},
-    {"text": "Add chicken, stir-fry until cooked through, about 3 minutes", "timer": 3},
-    {"text": "Season with 1 tbsp fish sauce, 1 tbsp soy sauce, 1/2 tsp sugar", "timer": 0},
-    {"text": "Toss in basil leaves, stir quickly, turn off heat", "timer": 0}
+    {{"text": "Heat pan with 1 tbsp oil, fry garlic and chili until fragrant", "timer": 0}},
+    {{"text": "Add chicken, stir-fry until cooked through, about 3 minutes", "timer": 3}},
+    {{"text": "Season with 1 tbsp fish sauce, 1 tbsp soy sauce, 1/2 tsp sugar", "timer": 0}},
+    {{"text": "Toss in basil leaves, stir quickly, turn off heat", "timer": 0}}
   ],
   "missing_ingredients": ["Basil leaves"]
-}"""
+}}"""
     try:
         res = client.chat.completions.create(
             model="typhoon-v2.5-30b-a3b-instruct",
@@ -225,10 +236,11 @@ Output ONLY valid JSON. No markdown, no code blocks.
 
 @app.post("/chat")
 async def chat_with_bingus(req: ChatRequest):
+    lang = "Thai" if req.locale == "th" else "English"
     ctx = req.context or {}
     context_str = f"Cooking: {ctx.get('recipe_name', '')}, Current step: {ctx.get('current_step', '')}"
     messages = [
-        {"role": "system", "content": f"You are Bingus Chef, a cute little cat chef. Friendly, playful, keep replies short (2-3 sentences). Give practical cooking advice.\n{context_str}"}
+        {"role": "system", "content": f"You are Bingus Chef, a cute little cat chef. Friendly, playful, keep replies short (2-3 sentences). Give practical cooking advice.\n{context_str}\n\nCRITICAL: Respond in {lang}. All text must be in {lang}."}
     ]
     for h in req.history[-8:]:
         messages.append({"role": h["role"], "content": h["content"]})

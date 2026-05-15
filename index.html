@@ -291,11 +291,11 @@
                   <canvas :ref="el => { if(el) nutritionChartRef = el; }" width="130" height="130"></canvas>
                 </div>
                 <div class="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
-                  <div><span class="font-semibold">🔥 Calories</span> <span style="color:#6B3A1F;">{{ t('cal', { v: n('calories') || 0 }) }}</span></div>
-                  <div><span class="font-semibold">🥩 Protein</span> <span style="color:#D4745C;">{{ t('protein', { v: n('protein') || 0 }) }}</span></div>
-                  <div><span class="font-semibold">🌾 Carbs</span> <span style="color:#D4A574;">{{ t('carbs', { v: n('carbs') || 0 }) }}</span></div>
-                  <div><span class="font-semibold">🧈 Fat</span> <span style="color:#B8A08E;">{{ t('fat', { v: n('fat') || 0 }) }}</span></div>
-                  <div><span class="font-semibold">🌿 Fiber</span> <span style="color:#6B8B3A;">{{ t('fiber', { v: n('fiber') || 0 }) }}</span></div>
+                  <div><span class="font-semibold">{{ t('nutrition_cal_label') }}</span> <span style="color:#6B3A1F;">{{ t('cal', { v: n('calories') || 0 }) }}</span></div>
+                  <div><span class="font-semibold">{{ t('nutrition_protein_label') }}</span> <span style="color:#D4745C;">{{ t('protein', { v: n('protein') || 0 }) }}</span></div>
+                  <div><span class="font-semibold">{{ t('nutrition_carbs_label') }}</span> <span style="color:#D4A574;">{{ t('carbs', { v: n('carbs') || 0 }) }}</span></div>
+                  <div><span class="font-semibold">{{ t('nutrition_fat_label') }}</span> <span style="color:#B8A08E;">{{ t('fat', { v: n('fat') || 0 }) }}</span></div>
+                  <div><span class="font-semibold">{{ t('nutrition_fiber_label') }}</span> <span style="color:#6B8B3A;">{{ t('fiber', { v: n('fiber') || 0 }) }}</span></div>
                 </div>
               </div>
             </div>
@@ -588,6 +588,11 @@
         have_it: { en:'🟢 Have it', th:'🟢 มีแล้ว' },
         need_to_buy_tag: { en:'🟡 Need to buy', th:'🟡 ต้องซื้อเพิ่ม' },
         nutrition_section: { en:'📊 Nutrition', th:'📊 โภชนาการ' },
+        nutrition_cal_label: { en:'🔥 Calories', th:'🔥 แคลอรี่' },
+        nutrition_protein_label: { en:'🥩 Protein', th:'🥩 โปรตีน' },
+        nutrition_carbs_label: { en:'🌾 Carbs', th:'🌾 คาร์บ' },
+        nutrition_fat_label: { en:'🧈 Fat', th:'🧈 ไขมัน' },
+        nutrition_fiber_label: { en:'🌿 Fiber', th:'🌿 ไฟเบอร์' },
         cal: { en:'{v} kcal', th:'{v} kcal' },
         protein: { en:'{v}g', th:'{v}g' },
         carbs: { en:'{v}g', th:'{v}g' },
@@ -692,7 +697,11 @@
       // ── Kitchen ──
       const tools = ref([]);
       const pantry = ref([]);
-      const presetPantry = ['Salt', 'Pepper', 'Fish sauce', 'Sugar', 'Cooking oil', 'Soy sauce', 'Oyster sauce', 'Seasoning powder', 'Garlic', 'Shallot'];
+      const presetPantryMap = {
+        en: ['Salt', 'Pepper', 'Fish sauce', 'Sugar', 'Cooking oil', 'Soy sauce', 'Oyster sauce', 'Seasoning powder', 'Garlic', 'Shallot'],
+        th: ['เกลือ', 'พริกไทย', 'น้ำปลา', 'น้ำตาล', 'น้ำมันพืช', 'ซีอิ๊วขาว', 'ซอสหอยนางรม', 'ผงปรุงรส', 'กระเทียม', 'หอมแดง']
+      };
+      const presetPantry = computed(() => presetPantryMap[locale.value] || presetPantryMap.en);
 
       const newTool = ref('');
       const newPantry = ref('');
@@ -717,7 +726,7 @@
           const local = loadKitchenFromLocal();
           if (local) { tools.value = local.tools || []; pantry.value = local.pantry || []; }
         }
-        if (!pantry.value.length) pantry.value = [...presetPantry];
+        if (!pantry.value.length) pantry.value = [...presetPantry.value];
       }
       async function saveKitchen() {
         await fetch(BASE + '/kitchen', {
@@ -791,7 +800,8 @@
               ingredients: getAllIngredients() || 'Use ingredients from the name',
               tools: tools.value.join(', '),
               method: cookingMethod.value || 'any',
-              notes: 'Missing ingredients: ' + unavailable.join(', ') + ' — substitute or omit'
+              notes: 'Missing ingredients: ' + unavailable.join(', ') + ' — substitute or omit',
+              locale: locale.value
             })
           });
           const data = await res.json();
@@ -864,11 +874,8 @@
               ingredients: getAllIngredients(),
               tools: tools.value.join(', '),
               method: cookingMethod.value || 'any',
-              notes: cookingNotes.value
-            })
-          });
-          const data = await res.json();
-          suggestions.value = (data.suggestions || []).slice(0, 5);
+              notes: cookingNotes.value,
+              locale: locale.value
           cookingStep.value = 'suggestions';
         } catch (e) {
           showToast(t('suggest_error'), 'error', '😿');
@@ -895,11 +902,8 @@
               ingredients: getAllIngredients(),
               tools: tools.value.join(', '),
               method: cookingMethod.value || 'any',
-              notes: cookingNotes.value
-            })
-          });
-          const data = await res.json();
-          const prep = (data.prep_steps || []).map((s, i) => ({ ...s, _done: false, _type: 'prep', _uid: 'prep-' + i }));
+              notes: cookingNotes.value,
+              locale: locale.value
           const cook = (data.cook_steps || []).map((s, i) => ({ ...s, _done: false, _type: 'cook', _uid: 'cook-' + i }));
           if (!prep.length && !cook.length && data.steps) {
             const fallback = data.steps.map((s, i) => ({ ...s, _done: false, _type: 'cook', _uid: 'cook-' + i }));
@@ -1209,7 +1213,8 @@
             body: JSON.stringify({
               message: chatMessages.value[chatMessages.value.length - 1].content,
               context: chatContext.value,
-              history: chatMessages.value.slice(-10)
+              history: chatMessages.value.slice(-10),
+              locale: locale.value
             })
           });
           const data = await res.json();
