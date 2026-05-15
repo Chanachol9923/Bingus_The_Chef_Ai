@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bingus Chef 🐾</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div id="app" class="flex h-screen overflow-hidden" style="font-family: 'Quicksand', sans-serif; background: #FFF8F0;">
+
+    <!-- ═══ SIDEBAR (Desktop) ═══ -->
+    <aside class="hidden lg:flex w-64 bg-white/80 backdrop-blur-xl p-6 flex-col gap-2 border-r border-amber-100 shrink-0">
+      <div class="flex items-center gap-3 mb-8 mt-2">
+        <span class="text-3xl">🐾</span>
+        <span class="text-2xl font-bold" style="color:#6B3A1F;">Bingus Chef</span>
+      </div>
+      <div v-for="item in navItems" :key="item.id"
+        @click="navigateTo(item.id)"
+        class="flex items-center gap-3 px-4 py-3 rounded-2xl cursor-pointer transition-all duration-200 font-semibold"
+        :style="page===item.id ? 'background:#F5E6D3; color:#6B3A1F;' : 'color:#8B6914;'">
+        <span class="text-xl">{{ item.icon }}</span>
+        <span>{{ item.label }}</span>
+      </div>
+      <div class="mt-auto pt-6 text-center text-xs" style="color:#B8A08E;">Bingus Chef v2.0 🐾</div>
+    </aside>
+
+    <!-- ═══ BOTTOM NAV (Mobile) ═══ -->
+    <nav class="fixed bottom-0 left-0 right-0 z-40 flex lg:hidden bg-white/95 backdrop-blur-xl border-t border-amber-100 safe-area-bottom">
+      <div v-for="item in navItems" :key="item.id"
+        @click="navigateTo(item.id)"
+        class="flex-1 flex flex-col items-center justify-center py-2 min-h-[56px] cursor-pointer transition-all duration-200"
+        :style="page===item.id ? 'color:#6B3A1F;' : 'color:#B8A08E;'">
+        <span class="text-xl leading-none">{{ item.icon }}</span>
+        <span class="text-[10px] mt-1 font-semibold">{{ item.label }}</span>
+      </div>
+    </nav>
+
+    <!-- ═══ MAIN ═══ -->
+    <main class="flex-1 overflow-y-auto pb-20 lg:pb-0 p-4 md:p-8">
+      <transition name="fade" mode="out-in">
+        <div :key="page">
+
+        <!-- ── PAGE: KITCHEN ── -->
+        <div v-if="page === 'kitchen'">
+          <h2 class="text-2xl md:text-3xl font-bold mb-2" style="color:#6B3A1F;">🏠 ตั้งค่าห้องครัว</h2>
+          <p class="text-sm mb-6" style="color:#8B6914;">บอกบิงกัสว่ามีอะไรในครัวบ้าง!</p>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+            <!-- อุปกรณ์ -->
+            <div class="rounded-3xl p-4 md:p-6" style="background:white; box-shadow:0 8px 32px rgba(107,58,31,0.06);">
+              <h3 class="font-bold text-lg mb-4" style="color:#6B3A1F;">🔪 อุปกรณ์ที่มี</h3>
+              <div class="flex flex-wrap gap-2 mb-4">
+                <span v-for="t in tools" :key="t"
+                  class="flex items-center gap-1 px-4 py-2 rounded-full text-sm font-medium"
+                  style="background:#F5E6D3; color:#6B3A1F;">
+                  {{ t }}
+                  <button @click="tools = tools.filter(x => x !== t)" class="ml-1 text-xs hover:text-red-500">✕</button>
+                </span>
+                <span v-if="!tools.length" class="text-sm" style="color:#B8A08E;">ยังไม่มีอุปกรณ์ เพิ่มเลย!</span>
+              </div>
+              <div class="flex gap-2">
+                <input v-model="newTool" @keyup.enter="addTool"
+                  class="flex-1 px-4 py-3 rounded-xl border-none outline-none text-sm"
+                  style="background:#FDF5E6;" placeholder="พิมพ์ชื่ออุปกรณ์...">
+                <button @click="addTool"
+                  class="px-6 py-3 rounded-xl font-bold text-sm transition-all duration-200 hover:scale-105"
+                  style="background:#6B3A1F; color:white;">+ เพิ่ม</button>
+              </div>
+            </div>
+
+            <!-- วัตถุดิบติดครัว -->
+            <div class="rounded-3xl p-4 md:p-6" style="background:white; box-shadow:0 8px 32px rgba(107,58,31,0.06);">
+              <h3 class="font-bold text-lg mb-4" style="color:#6B3A1F;">🧂 วัตถุดิบติดครัว</h3>
+              <div class="flex flex-wrap gap-2 mb-4">
+                <template v-for="p in pantry" :key="p">
+                  <span v-if="presetPantry.includes(p)"
+                    class="flex items-center gap-1 px-4 py-2 rounded-full text-sm font-medium"
+                    style="background:#E8F0E8; color:#3A6B3A;">
+                    {{ p }}
+                    <button @click="removePantry(p)" class="ml-1 text-xs hover:text-red-500">✕</button>
+                  </span>
+                  <span v-else
+                    class="flex items-center gap-1 px-4 py-2 rounded-full text-sm font-medium"
+                    style="background:#F5E6D3; color:#6B3A1F;">
+                    {{ p }}
+                    <button @click="removePantry(p)" class="ml-1 text-xs hover:text-red-500">✕</button>
+                  </span>
+                </template>
+              </div>
+              <div class="flex gap-2">
+                <input v-model="newPantry" @keyup.enter="addPantry"
+                  class="flex-1 px-4 py-3 rounded-xl border-none outline-none text-sm"
+                  style="background:#FDF5E6;" placeholder="พิมพ์วัตถุดิบ...">
+                <button @click="addPantry"
+                  class="px-6 py-3 rounded-xl font-bold text-sm transition-all duration-200 hover:scale-105"
+                  style="background:#6B3A1F; color:white;">+ เพิ่ม</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── PAGE: COOKING ── -->
+        <div v-if="page === 'cooking'" key="cooking">
+          <!-- STEP: INPUT -->
+          <div v-if="cookingStep === 'input'">
+            <h2 class="text-2xl md:text-3xl font-bold mb-2 text-center" style="color:#6B3A1F;">🍳 มื้อนี้กินอะไรดี?</h2>
+            <p class="text-sm mb-8 text-center" style="color:#8B6914;">เลือกวัตถุดิบที่มี + บอกวิธีทำที่อยากได้!</p>
+
+            <div class="max-w-2xl mx-auto space-y-6">
+              <!-- เลือกวัตถุดิบจาก pantry -->
+              <div class="rounded-3xl p-4 md:p-6" style="background:white; box-shadow:0 8px 32px rgba(107,58,31,0.06);">
+                <h3 class="font-semibold mb-3 text-sm md:text-base" style="color:#6B3A1F;">🧂 วัตถุดิบที่มี</h3>
+                <div v-if="!pantry.length" class="text-sm mb-3" style="color:#B8A08E;">ยังไม่มีวัตถุดิบในห้องครัว ไปตั้งค่าก่อน!</div>
+                <div class="flex flex-wrap gap-2 mb-4">
+                  <span v-for="p in pantry" :key="p"
+                    @click="toggleIngredient(p)"
+                    class="cursor-pointer px-4 py-2 rounded-full text-sm font-medium transition-all duration-200"
+                    :style="selectedIngredients.includes(p) ? 'background:#6B3A1F; color:white;' : 'background:#F5E6D3; color:#6B3A1F;'">
+                    {{ p }}
+                  </span>
+                </div>
+                <input v-model="extraIngredients"
+                  class="w-full px-4 py-3 rounded-xl border-none outline-none text-sm"
+                  style="background:#FDF5E6;" placeholder="พิมพ์วัตถุดิบอื่นๆ ที่มีเพิ่มเติม (เช่น เนื้อ 200g, ไข่ 3 ฟอง)...">
+              </div>
+
+              <!-- เลือกวิธีทำ -->
+              <div class="rounded-3xl p-4 md:p-6" style="background:white; box-shadow:0 8px 32px rgba(107,58,31,0.06);">
+                <h3 class="font-semibold mb-1 text-sm md:text-base" style="color:#6B3A1F;">🔥 อยากกินแบบไหน?</h3>
+                <p class="text-xs mb-3" style="color:#B8A08E;">🐾 ตัวเลือกนี้มีตามอุปกรณ์ที่ตั้งไว้ในห้องครัวนะ</p>
+                <div v-if="!availableMethods.length" class="text-sm" style="color:#B8A08E;">ยังไม่มีอุปกรณ์ ไปตั้งค่าห้องครัวก่อน!</div>
+                <div v-else class="flex flex-wrap gap-2">
+                  <span v-for="m in availableMethods" :key="m"
+                    @click="cookingMethod = m"
+                    class="cursor-pointer px-5 py-3 rounded-xl text-sm font-medium transition-all duration-200"
+                    :style="cookingMethod === m ? 'background:#6B3A1F; color:white;' : 'background:#F5E6D3; color:#6B3A1F;'">
+                    {{ m }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- หมายเหตุ -->
+              <div class="rounded-3xl p-6" style="background:white; box-shadow:0 8px 32px rgba(107,58,31,0.06);">
+                <h3 class="font-semibold mb-3" style="color:#6B3A1F;">📝 หมายเหตุ (ไม่บังคับ)</h3>
+                <textarea v-model="cookingNotes"
+                  class="w-full px-4 py-3 rounded-xl border-none outline-none text-sm resize-none"
+                  style="background:#FDF5E6;" rows="2" placeholder="เช่น อยากกินไม่เผ็ดมาก ทำเร็วๆ..."></textarea>
+              </div>
+
+              <button @click="getSuggestions"
+                class="w-full py-4 rounded-2xl font-bold text-lg transition-all duration-200 hover:scale-[1.02] active:scale-95"
+                style="background:#6B3A1F; color:white; box-shadow:0 8px 24px rgba(107,58,31,0.3);">
+                ✨ ให้ Bingus Chef แนะนำ!
+              </button>
+            </div>
+          </div>
+
+          <!-- STEP: SUGGESTIONS -->
+          <div v-if="cookingStep === 'suggestions'">
+            <div class="flex items-center gap-4 mb-6">
+              <button @click="cookingStep = 'input'; suggestions = []"
+                class="text-2xl hover:scale-110 transition-all">←</button>
+              <h2 class="text-3xl font-bold" style="color:#6B3A1F;">🍽️ แนะนำเมนู</h2>
+            </div>
+            <p class="text-sm mb-6" style="color:#8B6914;">บิงกัสแนะนำ {{ suggestions.length }} เมนูจากของที่มี! กดเลือกเลย</p>
+
+            <div v-if="suggestLoading" class="flex flex-col items-center py-16">
+              <div class="relative mb-6">
+                <div class="w-20 h-20 rounded-full flex items-center justify-center text-4xl animate-bounce" style="background:#FDF5E6; box-shadow:0 8px 32px rgba(107,58,31,0.1);">
+                  🐱
+                </div>
+                <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 flex gap-1.5">
+                  <div class="w-2.5 h-2.5 rounded-full animate-bounce" style="background:#D4A574; animation-delay:0s;"></div>
+                  <div class="w-2.5 h-2.5 rounded-full animate-bounce" style="background:#D4745C; animation-delay:0.15s;"></div>
+                  <div class="w-2.5 h-2.5 rounded-full animate-bounce" style="background:#B8A08E; animation-delay:0.3s;"></div>
+                </div>
+              </div>
+              <p class="font-bold" style="color:#6B3A1F;">บิงกัสกำลังคิดเมนูให้...</p>
+              <p class="text-sm mt-1" style="color:#B8A08E;">เดี๋ยวนะ~ กำลังเลือกเมนูที่ใช้อุปกรณ์ที่มี</p>
+            </div>
+
+            <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+              <div v-for="(r, i) in suggestions" :key="i"
+                @click="selectSuggestion(r)"
+                class="rounded-3xl p-4 md:p-6 cursor-pointer transition-all duration-200 hover:scale-[1.02] border-2"
+                :class="selectedSuggestionIndex === i ? 'border-amber-700' : 'border-transparent'"
+                style="background:white; box-shadow:0 4px 20px rgba(107,58,31,0.06);">
+                <div class="text-3xl mb-2">{{ r.emoji || '🍽️' }}</div>
+                <h3 class="font-bold text-lg" style="color:#6B3A1F;">{{ r.name }}</h3>
+                <p class="text-xs mt-2 line-clamp-2" style="color:#8B6914;">{{ r.description }}</p>
+                <div class="mt-2 inline-block px-3 py-1 rounded-full text-xs font-bold" style="background:#F0F9F0; color:#3A6B3A;">
+                  🔥 {{ r.calories }} kcal
+                </div>
+                <div v-if="r.ingredients?.length" class="mt-3 pt-3 border-t" style="border-color:#F5E6D3;">
+                  <div class="text-xs font-semibold mb-1.5" style="color:#6B3A1F;">🧂 วัตถุดิบที่ต้องใช้</div>
+                  <div class="flex flex-wrap gap-1.5">
+                    <span v-for="ing in r.ingredients" :key="ing"
+                      class="px-2.5 py-1 rounded-full text-xs"
+                      :style="r.missing?.includes(ing) ? 'background:#FFF8E1; color:#8B6914; border:1px solid #F0DCA0;' : 'background:#F0F9F0; color:#3A6B3A;'">
+                      {{ ing }}
+                    </span>
+                  </div>
+                </div>
+                <div v-if="r.missing?.length" class="mt-2 text-xs" style="color:#D4745C;">
+                  🛒 ต้องซื้อ: {{ r.missing.join(', ') }}
+                </div>
+              </div>
+            </div>
+
+            <button v-if="selectedSuggestionIndex !== null && !suggestLoading"
+              @click="getRecipeDetail"
+              class="mt-6 w-full py-4 rounded-2xl font-bold text-lg transition-all duration-200 hover:scale-[1.02]"
+              style="background:#6B3A1F; color:white; box-shadow:0 8px 24px rgba(107,58,31,0.3);">
+              ✅ เลย! ดูวิธีทำ {{ suggestions[selectedSuggestionIndex].name }}
+            </button>
+          </div>
+
+          <!-- STEP: DETAIL -->
+          <div v-if="cookingStep === 'detail'">
+            <div v-if="detailLoading" class="flex flex-col items-center py-16">
+              <div class="relative mb-6">
+                <div class="w-20 h-20 rounded-full flex items-center justify-center text-4xl animate-bounce" style="background:#FDF5E6; box-shadow:0 8px 32px rgba(107,58,31,0.1);">
+                  🐱
+                </div>
+                <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 flex gap-1.5">
+                  <div class="w-2.5 h-2.5 rounded-full animate-bounce" style="background:#D4A574; animation-delay:0s;"></div>
+                  <div class="w-2.5 h-2.5 rounded-full animate-bounce" style="background:#D4745C; animation-delay:0.15s;"></div>
+                  <div class="w-2.5 h-2.5 rounded-full animate-bounce" style="background:#B8A08E; animation-delay:0.3s;"></div>
+                </div>
+              </div>
+              <p class="font-bold" style="color:#6B3A1F;">บิงกัสกำลังเขียนสูตร...</p>
+              <p class="text-sm mt-1" style="color:#B8A08E;">กำลังคิดวัตถุดิบและขั้นตอนให้นะ</p>
+            </div>
+            <div v-else-if="currentRecipe">
+            <!-- Header -->
+            <div class="flex items-center gap-4 mb-4">
+              <button @click="cookingStep = 'suggestions'; currentRecipe = null"
+                class="text-2xl hover:scale-110 transition-all">←</button>
+              <div>
+                <h2 class="text-3xl font-bold" style="color:#6B3A1F;">{{ currentRecipe.name }}</h2>
+                <p class="text-sm" style="color:#8B6914;">{{ currentRecipe.description }}</p>
+              </div>
+            </div>
+
+            <!-- Ingredients card -->
+            <div class="rounded-3xl p-4 md:p-6 mb-4" style="background:white; box-shadow:0 8px 32px rgba(107,58,31,0.06);">
+              <h3 class="font-bold mb-4" style="color:#6B3A1F;">🥘 วัตถุดิบ</h3>
+              <div v-if="currentRecipe.ingredients?.length" class="flex flex-wrap gap-2">
+                <span v-for="ing in currentRecipe.ingredients" :key="ing"
+                  class="px-3 py-1.5 rounded-full text-sm font-medium"
+                  :style="(currentRecipe.missing_ingredients || []).some(m => ing.includes(m)) ? 'background:#FFF8E1; color:#8B6914; border:1px solid #F0DCA0;' : 'background:#F0F9F0; color:#3A6B3A;'">
+                  {{ ing }}
+                </span>
+              </div>
+              <div v-else class="flex flex-wrap gap-2">
+                <span v-for="ing in currentRecipe.missing_ingredients" :key="ing"
+                  class="px-3 py-1.5 rounded-full text-sm font-medium"
+                  style="background:#FFF8E1; color:#8B6914; border:1px solid #F0DCA0;">
+                  {{ ing }}
+                </span>
+              </div>
+              <div class="flex gap-4 mt-3 text-xs">
+                <span style="color:#3A6B3A;">🟢 มีแล้ว</span>
+                <span style="color:#8B6914;">🟡 ต้องซื้อเพิ่ม</span>
+              </div>
+            </div>
+
+            <!-- Nutrition card with mini chart -->
+            <div class="rounded-3xl p-4 md:p-6 mb-4 md:mb-6" style="background:white; box-shadow:0 8px 32px rgba(107,58,31,0.06);">
+              <h3 class="font-bold mb-4" style="color:#6B3A1F;">📊 โภชนาการ</h3>
+              <div class="flex items-start gap-6 flex-wrap">
+                <div style="width:130px; height:130px;">
+                  <canvas :ref="el => { if(el) nutritionChartRef = el; }" width="130" height="130"></canvas>
+                </div>
+                <div class="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
+                  <div><span class="font-semibold">🔥 แคลอรี่</span> <span style="color:#6B3A1F;">{{ n('calories') || 0 }} kcal</span></div>
+                  <div><span class="font-semibold">🥩 โปรตีน</span> <span style="color:#D4745C;">{{ n('protein') || 0 }}g</span></div>
+                  <div><span class="font-semibold">🌾 คาร์บ</span> <span style="color:#D4A574;">{{ n('carbs') || 0 }}g</span></div>
+                  <div><span class="font-semibold">🧈 ไขมัน</span> <span style="color:#B8A08E;">{{ n('fat') || 0 }}g</span></div>
+                  <div><span class="font-semibold">🌿 ไฟเบอร์</span> <span style="color:#6B8B3A;">{{ n('fiber') || 0 }}g</span></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Missing Ingredients -->
+            <div v-if="currentRecipe.missing_ingredients?.length" class="rounded-3xl p-4 md:p-6 mb-4" style="background:white; box-shadow:0 8px 32px rgba(107,58,31,0.06);">
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="font-bold" style="color:#6B3A1F;">🛒 วัตถุดิบที่ต้องซื้อเพิ่ม</h3>
+                <button @click="adjustForMissing" class="text-xs px-4 py-2 rounded-xl font-bold" style="background:#D4A574; color:white;">✨ ปรับสูตรตามที่มี</button>
+              </div>
+              <div class="flex flex-wrap gap-2">
+                <span v-for="m in currentRecipe.missing_ingredients" :key="m"
+                  @click="toggleMissing(m)"
+                  class="cursor-pointer px-4 py-2 rounded-full text-sm font-medium transition-all duration-200"
+                  :style="(missingChecked.includes(m)) ? 'background:#D4745C; color:white; text-decoration:line-through;' : 'background:#F5E6D3; color:#6B3A1F;'">
+                  {{ m }}
+                </span>
+              </div>
+              <p class="text-xs mt-2" style="color:#B8A08E;">แตะวัตถุดิบที่ไม่มีเพื่อให้ AI ปรับสูตร</p>
+            </div>
+
+            <!-- Prep Steps -->
+            <div v-if="currentRecipe.prep_steps?.length" class="rounded-3xl p-4 md:p-6 mb-4" style="background:white; box-shadow:0 8px 32px rgba(107,58,31,0.06);">
+              <h3 class="font-bold mb-4 text-base md:text-lg" style="color:#6B3A1F;">📋 เตรียมวัตถุดิบ</h3>
+              <div class="space-y-4">
+                <div v-for="step in currentRecipe.prep_steps" :key="step._uid"
+                  class="flex items-start gap-4 p-5 md:p-6 rounded-2xl transition-all duration-300 shadow-sm"
+                  :style="step._done ? 'background:#F0F9F0; opacity:0.7;' : 'background:#FFFDF5; border:1px solid #F5E6D3;'">
+                  <input type="checkbox" v-model="step._done" class="w-6 h-6 mt-0.5 accent-amber-700 cursor-pointer shrink-0">
+                  <div class="flex-1 min-w-0">
+                    <span class="font-medium text-base md:text-lg leading-relaxed" :class="step._done ? 'line-through opacity-60' : ''" style="color:#6B3A1F;">{{ step.text }}</span>
+                  </div>
+                  <div v-if="step.timer > 0" class="flex items-center gap-2 shrink-0">
+                    <span class="text-sm font-bold" style="color:#8B6914;">⏱️ {{ formatTimer(timers[step._uid]) }}</span>
+                    <button v-if="!timers[step._uid]?._running" @click="startTimer(step._uid, step.timer)"
+                      class="px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm" style="background:#6B3A1F; color:white;">เริ่ม</button>
+                    <button v-else @click="stopTimer(step._uid)"
+                      class="px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm" style="background:#D4745C; color:white;">หยุด</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Cook Steps -->
+            <div class="rounded-3xl p-4 md:p-6 mb-4 md:mb-6" style="background:white; box-shadow:0 8px 32px rgba(107,58,31,0.06);">
+              <h3 class="font-bold mb-4 text-base md:text-lg" style="color:#6B3A1F;">👨‍🍳 ขั้นตอนการทำ</h3>
+              <div class="space-y-4">
+                <div v-for="step in currentRecipe.cook_steps" :key="step._uid"
+                  class="flex items-start gap-4 p-5 md:p-6 rounded-2xl transition-all duration-300 shadow-sm"
+                  :style="step._done ? 'background:#F0F9F0; opacity:0.7;' : 'background:#FFFDF5; border:1px solid #F5E6D3;'">
+                  <input type="checkbox" v-model="step._done" class="w-6 h-6 mt-0.5 accent-amber-700 cursor-pointer shrink-0">
+                  <div class="flex-1 min-w-0">
+                    <span class="font-medium text-base md:text-lg leading-relaxed" :class="step._done ? 'line-through opacity-60' : ''" style="color:#6B3A1F;">{{ step.text }}</span>
+                  </div>
+                  <div v-if="step.timer > 0" class="flex items-center gap-2 shrink-0">
+                    <span class="text-sm font-bold" style="color:#8B6914;">⏱️ {{ formatTimer(timers[step._uid]) }}</span>
+                    <button v-if="!timers[step._uid]?._running" @click="startTimer(step._uid, step.timer)"
+                      class="px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm" style="background:#6B3A1F; color:white;">เริ่ม</button>
+                    <button v-else @click="stopTimer(step._uid)"
+                      class="px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm" style="background:#D4745C; color:white;">หยุด</button>
+                  </div>
+                </div>
+                <div v-if="!currentRecipe.cook_steps?.length" class="text-sm text-center py-4" style="color:#B8A08E;">ไม่มีขั้นตอนการทำอาหาร</div>
+              </div>
+            </div>
+
+            <!-- Note + Save -->
+            <div class="rounded-3xl p-4 md:p-6 mb-4 md:mb-6" style="background:white; box-shadow:0 8px 32px rgba(107,58,31,0.06);">
+              <h3 class="font-semibold mb-3" style="color:#6B3A1F;">📝 โน้ตส่วนตัว</h3>
+              <textarea v-model="userNote"
+                class="w-full px-4 py-3 rounded-xl border-none outline-none text-sm resize-none"
+                style="background:#FDF5E6;" rows="2" placeholder="จดอะไรก็ได้ที่อยากจำ..."></textarea>
+            </div>
+
+            <!-- Image upload -->
+            <div class="rounded-3xl p-4 md:p-6 mb-4 md:mb-6" style="background:white; box-shadow:0 8px 32px rgba(107,58,31,0.06);">
+              <h3 class="font-semibold mb-3" style="color:#6B3A1F;">📸 ถ่ายรูปอาหาร</h3>
+              <div class="flex items-center gap-4">
+                <label class="cursor-pointer px-6 py-3 rounded-xl font-bold text-sm transition-all hover:scale-105 inline-block"
+                  style="background:#D4A574; color:white;">
+                  📷 เลือกรูป
+                  <input type="file" accept="image/*" capture="environment" @change="handleImageUpload" class="hidden">
+                </label>
+                <span v-if="imagePreview" class="text-sm" style="color:#3A6B3A;">✅ มีรูปแล้ว!</span>
+              </div>
+              <img v-if="imagePreview" :src="imagePreview" class="mt-3 w-32 h-32 object-cover rounded-2xl">
+            </div>
+
+            <button @click="saveToGallery"
+              class="w-full py-4 rounded-2xl font-bold text-lg transition-all duration-200 hover:scale-[1.02] active:scale-95"
+              style="background:#6B3A1F; color:white; box-shadow:0 8px 24px rgba(107,58,31,0.3);">
+              🎉 ทำเสร็จแล้ว! เก็บลง Gallery เลย!
+            </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── PAGE: GALLERY ── -->
+        <div v-if="page === 'gallery'" key="gallery">
+          <h2 class="text-3xl font-bold mb-2" style="color:#6B3A1F;">🖼️ แกลเลอรี่อาหาร</h2>
+          <p class="text-sm mb-6" style="color:#8B6914;">เมนูที่เคยทำทั้งหมด {{ gallery.length }} รายการ</p>
+
+          <div v-if="!gallery.length" class="text-center py-16">
+            <div class="text-6xl mb-4">🍽️</div>
+            <p style="color:#B8A08E;">ยังไม่มีเมนูที่บันทึกไว้ ไปทำอาหารกัน!</p>
+          </div>
+
+          <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+            <div v-for="item in gallery" :key="item.id"
+              class="rounded-3xl overflow-hidden transition-all duration-200 hover:scale-[1.02]"
+              style="background:white; box-shadow:0 8px 32px rgba(107,58,31,0.06);">
+              <div class="h-40 flex items-center justify-center text-5xl" style="background:#FDF5E6;">
+                <img v-if="item.image_url" :src="item.image_url" class="w-full h-full object-cover">
+                <span v-else>🍳</span>
+              </div>
+              <div class="p-5">
+                <h3 class="font-bold text-lg" style="color:#6B3A1F;">{{ item.name }}</h3>
+                <p v-if="item.note" class="text-xs mt-1 line-clamp-2" style="color:#8B6914;">{{ item.note }}</p>
+                <div class="mt-2 inline-block px-3 py-1 rounded-full text-xs font-bold" style="background:#F0F9F0; color:#3A6B3A;">
+                  🔥 {{ item.nutrition?.calories || '?' }} kcal
+                </div>
+                <div class="mt-4 flex gap-2">
+                  <button @click="cookAgain(item)"
+                    class="flex-1 py-2 rounded-xl text-xs font-bold transition-all"
+                    style="background:#6B3A1F; color:white;">♨️ ทำอีก</button>
+                  <button @click="deleteFromGallery(item.id)"
+                    class="px-4 py-2 rounded-xl text-xs font-bold transition-all"
+                    style="background:#F5E6D3; color:#D4745C;">🗑️</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── PAGE: DASHBOARD ── -->
+        <div v-if="page === 'dashboard'">
+          <h2 class="text-3xl font-bold mb-2" style="color:#6B3A1F;">📊 สถิติการทำอาหาร</h2>
+          <p class="text-sm mb-6" style="color:#8B6914;">ดูภาพรวมการทำอาหารของคุณ</p>
+
+          <!-- Stats cards -->
+          <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+            <div class="rounded-2xl p-5 text-center" style="background:white; box-shadow:0 4px 16px rgba(107,58,31,0.05);">
+              <div class="text-3xl mb-1">🍽️</div>
+              <div class="text-2xl font-bold" style="color:#6B3A1F;">{{ gallery.length }}</div>
+              <div class="text-xs" style="color:#8B6914;">เมนูที่ทำ</div>
+            </div>
+            <div class="rounded-2xl p-5 text-center" style="background:white; box-shadow:0 4px 16px rgba(107,58,31,0.05);">
+              <div class="text-3xl mb-1">🔥</div>
+              <div class="text-2xl font-bold" style="color:#6B3A1F;">{{ avgCalories }}</div>
+              <div class="text-xs" style="color:#8B6914;">แคลเฉลี่ย</div>
+            </div>
+            <div class="rounded-2xl p-5 text-center" style="background:white; box-shadow:0 4px 16px rgba(107,58,31,0.05);">
+              <div class="text-3xl mb-1">🥩</div>
+              <div class="text-2xl font-bold" style="color:#6B3A1F;">{{ totalProtein }}g</div>
+              <div class="text-xs" style="color:#8B6914;">โปรตีนรวม</div>
+            </div>
+
+          </div>
+
+          <!-- Charts -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+            <div class="rounded-3xl p-4 md:p-6" style="background:white; box-shadow:0 8px 32px rgba(107,58,31,0.06);">
+              <h3 class="font-bold mb-4 text-sm md:text-base" style="color:#6B3A1F;">📊 สัดส่วนสารอาหารเฉลี่ย</h3>
+              <div style="max-width:320px; margin:0 auto;"><canvas id="doughnutChart"></canvas></div>
+            </div>
+            <div class="rounded-3xl p-6" style="background:white; box-shadow:0 8px 32px rgba(107,58,31,0.06);">
+              <h3 class="font-bold mb-4" style="color:#6B3A1F;">📈 แคลอรี่แต่ละเมนู</h3>
+              <div style="height:260px;"><canvas id="barChart"></canvas></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      </transition>
+    </main>
+
+    <!-- ═══ TOAST NOTIFICATION ═══ -->
+    <transition name="toast">
+      <div v-if="toast.show" class="fixed top-6 left-1/2 -translate-x-1/2 z-[200] px-6 py-4 rounded-2xl shadow-2xl font-bold text-sm flex items-center gap-3"
+        :style="toast.type === 'success' ? 'background:#6B3A1F; color:white;' : toast.type === 'error' ? 'background:#D4745C; color:white;' : 'background:#F5E6D3; color:#6B3A1F;'">
+        <span>{{ toast.icon }}</span>
+        <span>{{ toast.message }}</span>
+      </div>
+    </transition>
+
+    <!-- ═══ CONFIRM MODAL ═══ -->
+    <div v-if="confirmDialog.show" class="fixed inset-0 z-[150] flex items-center justify-center" style="background:rgba(0,0,0,0.25);">
+      <div class="bg-white rounded-3xl p-6 max-w-xs w-full mx-4 shadow-2xl text-center">
+        <p class="text-base font-semibold mb-6" style="color:#6B3A1F;">{{ confirmDialog.message }}</p>
+        <div class="flex gap-3 justify-center">
+          <button @click="confirmAnswer(true)"
+            class="px-8 py-2.5 rounded-xl font-bold text-sm transition-all hover:scale-105"
+            style="background:#6B3A1F; color:white;">ใช่เลย</button>
+          <button @click="confirmAnswer(false)"
+            class="px-8 py-2.5 rounded-xl font-bold text-sm transition-all"
+            style="background:#F5E6D3; color:#6B3A1F;">ยังไม่</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ BINGUS CHAT FLOATING ═══ -->
+    <div class="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2">
+      <transition name="chat">
+        <div v-if="showChat" class="w-72 rounded-3xl overflow-hidden shadow-2xl"
+          style="background:white; border:2px solid #F5E6D3;">
+          <div class="flex items-center justify-between px-4 py-3" style="background:#6B3A1F; color:white;">
+            <div class="flex items-center gap-2">
+              <img src="/BingusProf.jpg" class="w-8 h-8 rounded-full object-cover border-2 border-white/50">
+              <span class="font-bold text-sm">Bingus Chef</span>
+            </div>
+            <button @click="showChat = false" class="text-white/70 hover:text-white text-lg">—</button>
+          </div>
+          <div class="h-64 overflow-y-auto p-4 space-y-3" ref="chatBox">
+            <div v-for="(msg, i) in chatMessages" :key="i"
+              class="flex" :class="msg.role === 'user' ? 'justify-end' : 'justify-start'">
+              <div class="max-w-[80%] px-4 py-2.5 rounded-2xl text-sm"
+                :style="msg.role === 'user'
+                  ? 'background:#F5E6D3; color:#6B3A1F;'
+                  : 'background:#FDF5E6; color:#6B3A1F; border:1px solid #F5E6D3;'">
+                {{ msg.content }}
+              </div>
+            </div>
+            <div v-if="chatLoading" class="text-xs" style="color:#B8A08E;">กำลังพิมพ์...</div>
+          </div>
+          <div class="flex gap-2 p-3 border-t" style="border-color:#F5E6D3;">
+            <input v-model="chatInput" @keyup.enter="sendChat"
+              class="flex-1 px-3 py-2 rounded-xl text-sm border-none outline-none"
+              style="background:#FDF5E6;" placeholder="ถามบิงกัส...">
+            <button @click="sendChat"
+              class="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold"
+              style="background:#6B3A1F; color:white;">➤</button>
+          </div>
+        </div>
+      </transition>
+      <button @click="showChat = !showChat"
+        class="w-16 h-16 rounded-full flex items-center justify-center shadow-xl transition-all duration-200 hover:scale-110 overflow-hidden border-2 border-white"
+        style="background:#6B3A1F;">
+        <img src="/BingusProf.jpg" class="w-full h-full object-cover">
+      </button>
+    </div>
+
+    <!-- Timer alert sound -->
+    <audio ref="timerSound" src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACAf39/f4B/f3+AgH9/f3+AgH9/f3+AgH9/f3+AgIC Af39/f4B/f3+AgH9/f3+AgH9/f4CAf39/f4B/f3+AgH9/f3+AgICAf39/f4B/f3+AgH9/f3+AgH9/f3+AgH9/f3+AgH9/f4B/f4B/f3+AgICAf39/f4B/f3+AgH9/f3+AgH9/f3+AgH9/f3+AgH9/f3+AgH9/f3+AgH9/gICAf39/f4B/f3+AgH9/f3+AgH9/f4B/f3+AgH9/f3+AgH9/f4CAf39/f4B/f4B/f3+AgH9/f4CAf39/gICAf39/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgH9/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgH9/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgH9/f4B/f3+AgH9/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgICAf39/f4B/f4B/f3+AgICAf39/f4B/f3+AgH9/f3+AgH9/f4B/f3+AgH9/f4B/f4B/f3+AgICAf39/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgH9/f4CAf39/f4B/f3+AgICAf39/f4B/f3+AgH9/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgH9/f4CAf39/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgH9/f4B/f3+AgH9/f4CAf39/f4B/f4B/f3+AgH9/f4CAf39/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgH9/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgICAf39/f4B/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgICAf39/f4B/f3+AgH9/f4B/f4B/f3+AgH9/f4B/f3+AgH9/f3+AgH9/f4CAf39/f4B/f3+AgH9/f4CAf39/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgH9/f4B/f3+AgH9/f4CAf39/f4B/f4B/f3+AgH9/f4CAf39/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgH9/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgH9/f3+AgH9/f4CAf39/f4B/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgICAf39/f4B/f3+AgH9/f4B/f3+AgH9/f4CAf39/f4B/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgICAf39/f4B/f4B/f3+AgH9/f4B/f3+AgH9/f3+AgH9/f4CAf39/f4B/f3+AgH9/f4B/f3+AgH9/f4CAf39/f4B/f4B/f3+AgH9/f4CAf39/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgH9/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgH9/f4CAf39/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgICAf39/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f4B/f3+AgH9/f4B/f3+AgH9/f3+AgH9/f4CAf39/f4B/f3+AgH9/f4CAf39/f4B/f4B/f3+AgH9/f4B/f3+AgH9/f3+AgH9/f4B/f3+AgH9/f4CAf39/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f4B/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgH9/f4CAf39/f4B/f3+AgICAf39/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgH9/f4B/f3+AgH9/f4CAf39/f4B/f3+AgH9/f4B/f3+AgH9/f3+AgH9/f4CAf39/f4B/f4B/f3+AgH9/f4B/f3+AgH9/f4CAf39/f4B/f3+AgH9/f4CAf39/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f4B/f3+AgH9/f4B/f4B/f3+AgH9/f4CAf39/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgH9/f4CAf39/f4B/f3+AgH9/f4CAf39/f4B/f4B/f3+AgH9/f4B/f3+AgH9/f3+AgH9/f4CAf39/f4B/f3+AgH9/f4CAf39/f4B/f3+AgICAf39/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgH9/f4CAf39/f4CAf39/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f4B/f3+AgH9/f4B/f3+AgH9/f3+AgH9/f4B/f3+AgICAf39/f4B/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgH9/f4CAf39/f4B/f3+AgH9/f4B/f3+AgH9/f4CAf39/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgH9/f4B/f3+AgH9/f4CAf39/f4B/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgH9/f4CAf39/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgH9/f4CAf39/f4B/f3+AgH9/f4B/f3+AgH9/f3+AgH9/f4CAf39/f4B/f3+AgICAf39/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgICAf39/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f4A="></audio>
+  </div>
+
+  <script>
+  const { createApp, ref, computed, watch, nextTick, onMounted } = Vue;
+
+  createApp({
+    setup() {
+      const BASE = '';
+
+      // ── Navigation ──
+      const navItems = [
+        { id: 'kitchen', label: 'Your Kitchen', icon: '🏠' },
+        { id: 'cooking', label: 'Cooking Now', icon: '🍳' },
+        { id: 'gallery', label: 'Food Gallery', icon: '🖼️' },
+        { id: 'dashboard', label: 'Dashboard', icon: '📊' },
+      ];
+      const page = ref('cooking');
+
+      function navigateTo(id) {
+        page.value = id;
+        if (id === 'dashboard') {
+          waitForCharts(0);
+        }
+      }
+      function waitForCharts(tries) {
+        if (tries > 20) return;
+        if (document.getElementById('doughnutChart') && document.getElementById('barChart')) {
+          initCharts();
+        } else {
+          setTimeout(() => waitForCharts(tries + 1), 100);
+        }
+      }
+
+      // ── Kitchen ──
+      const tools = ref([]);
+      const pantry = ref([]);
+      const presetPantry = ['เกลือ', 'พริกไทย', 'น้ำปลา', 'น้ำตาล', 'น้ำมันพืช', 'ซีอิ๊วขาว', 'ซอสหอยนางรม', 'ผงปรุงรส', 'กระเทียม', 'หอมแดง'];
+      const newTool = ref('');
+      const newPantry = ref('');
+
+      function addTool() {
+        const t = newTool.value.trim();
+        if (t && !tools.value.includes(t)) { tools.value.push(t); newTool.value = ''; saveKitchen(); }
+      }
+      function addPantry() {
+        const p = newPantry.value.trim();
+        if (p && !pantry.value.includes(p)) { pantry.value.push(p); newPantry.value = ''; saveKitchen(); }
+      }
+      function removePantry(p) { pantry.value = pantry.value.filter(x => x !== p); saveKitchen(); }
+      async function loadKitchen() {
+        try {
+          const res = await fetch(BASE + '/kitchen');
+          const data = await res.json();
+          tools.value = data.tools || [];
+          pantry.value = data.pantry || [];
+        } catch { /* use defaults */ }
+        if (!tools.value.length && !pantry.value.length) {
+          const local = loadKitchenFromLocal();
+          if (local) { tools.value = local.tools || []; pantry.value = local.pantry || []; }
+        }
+        if (!pantry.value.length) pantry.value = [...presetPantry];
+      }
+      async function saveKitchen() {
+        await fetch(BASE + '/kitchen', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tools: tools.value, pantry: pantry.value })
+        });
+        saveKitchenToLocal(tools.value, pantry.value);
+      }
+
+      // ── Cooking ──
+      const methodToTool = {
+        'ผัด': ['กระทะ', 'เตา', 'เตาไฟฟ้า'],
+        'ทอด': ['กระทะ', 'เตา', 'เตาไฟฟ้า', 'หม้อทอดไร้น้ำมัน'],
+        'ต้ม': ['หม้อ', 'เตา', 'เตาไฟฟ้า', 'กาต้มน้ำ'],
+        'แกง': ['หม้อ', 'เตา', 'เตาไฟฟ้า'],
+        'ตุ๋น': ['หม้อ', 'เตา', 'เตาไฟฟ้า', 'หม้อตุ๋น'],
+        'นึ่ง': ['ซึ้ง', 'หม้อนึ่ง', 'หม้อหุงข้าว'],
+        'ย่าง': ['เตาอบ', 'เตาย่าง', 'กระทะย่าง'],
+        'อบ': ['เตาอบ', 'ไมโครเวฟ'],
+        'ปิ้ง': ['เตาย่าง', 'เตาปิ้ง'],
+        'จี่': ['กระทะ', 'เตา', 'เตาไฟฟ้า'],
+        'ซูวี': ['ซูวี']
+      };
+      const availableMethods = computed(() => {
+        const userTools = tools.value.map(t => t.toLowerCase());
+        return Object.entries(methodToTool)
+          .filter(([_, needed]) => needed.length === 0 || needed.some(n => userTools.some(t => t.includes(n))))
+          .map(([m]) => m);
+      });
+      const cookingStep = ref('input');
+      const selectedIngredients = ref([]);
+      const extraIngredients = ref('');
+      const cookingMethod = ref('');
+      const cookingNotes = ref('');
+      const suggestions = ref([]);
+      const suggestLoading = ref(false);
+      const detailLoading = ref(false);
+      const selectedSuggestionIndex = ref(null);
+      const currentRecipe = ref(null);
+      const userNote = ref('');
+      const imageFile = ref(null);
+      const imagePreview = ref('');
+      const missingChecked = ref([]);
+      function saveGalleryToLocal(data) {
+        localStorage.setItem('bingus_gallery', JSON.stringify(data));
+      }
+      function loadGalleryFromLocal() {
+        try { return JSON.parse(localStorage.getItem('bingus_gallery') || '[]'); } catch { return []; }
+      }
+      function saveKitchenToLocal(t, p) {
+        localStorage.setItem('bingus_kitchen', JSON.stringify({ tools: t, pantry: p }));
+      }
+      function loadKitchenFromLocal() {
+        try { return JSON.parse(localStorage.getItem('bingus_kitchen') || 'null'); } catch { return null; }
+      }
+      function toggleMissing(m) {
+        const i = missingChecked.value.indexOf(m);
+        if (i >= 0) missingChecked.value.splice(i, 1);
+        else missingChecked.value.push(m);
+      }
+      async function adjustForMissing() {
+        const unavailable = missingChecked.value;
+        if (!unavailable.length) { showToast('เลือกวัตถุดิบที่ไม่มีก่อน', 'warn', '🐾'); return; }
+        const r = currentRecipe.value;
+        showToast('กำลังปรับสูตรตามที่มี...', 'warn', '🔄');
+        try {
+          const res = await fetch(BASE + '/detail', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: r.name,
+              ingredients: getAllIngredients() || 'ดูจากชื่อเมนู',
+              tools: tools.value.join(', '),
+              method: cookingMethod.value || 'ตามสะดวก',
+              notes: 'ไม่มีวัตถุดิบ: ' + unavailable.join(', ') + ' ปรับสูตรโดยใช้วัตถุดิบอื่นแทนหรือตัดออก'
+            })
+          });
+          const data = await res.json();
+          const prep = (data.prep_steps || []).map((s, i) => ({ ...s, _done: false, _type: 'prep', _uid: 'prep-' + i }));
+          const cook = (data.cook_steps || []).map((s, i) => ({ ...s, _done: false, _type: 'cook', _uid: 'cook-' + i }));
+          data.steps = [...prep, ...cook];
+          data.prep_steps = prep;
+          data.cook_steps = cook;
+          data.missing_ingredients = data.missing_ingredients || [];
+          currentRecipe.value = data;
+          missingChecked.value = [];
+          showToast('ปรับสูตรแล้ว! ดูวัตถุดิบที่ต้องใช้ใหม่', 'success', '✅');
+          nextTick(() => {
+            drawNutritionChart();
+            updateBingusContext();
+          });
+          timers.value = {};
+          data.steps.forEach(s => { timers.value[s._uid] = { remaining: s.timer * 60 || 0, _running: false }; });
+        } catch (e) {
+          showToast('บิงกัสปรับสูตรไม่ทัน ลองใหม่น้า', 'error', '😿');
+        }
+      }
+      const nutritionChartRef = ref(null);
+      let nutritionChartInstance = null;
+
+      // ── Toast + Confirm ──
+      const toast = ref({ show: false, message: '', type: 'success', icon: '' });
+      let toastTimer = null;
+      function showToast(msg, type = 'success', icon = '') {
+        toast.value = { show: true, message: msg, type, icon: icon || (type === 'success' ? '✅' : type === 'error' ? '😿' : '🐾') };
+        if (toastTimer) clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => { toast.value.show = false; }, 3000);
+      }
+      const confirmDialog = ref({ show: false, message: '' });
+      let confirmResolve = null;
+      function showConfirm(msg) {
+        return new Promise(resolve => {
+          confirmResolve = resolve;
+          confirmDialog.value = { show: true, message: msg };
+        });
+      }
+      function confirmAnswer(yes) {
+        confirmDialog.value = { show: false, message: '' };
+        if (confirmResolve) { confirmResolve(yes); confirmResolve = null; }
+      }
+
+      function toggleIngredient(p) {
+        const i = selectedIngredients.value.indexOf(p);
+        if (i >= 0) selectedIngredients.value.splice(i, 1);
+        else selectedIngredients.value.push(p);
+      }
+
+      function getAllIngredients() {
+        const selected = selectedIngredients.value.join(', ');
+        const extra = extraIngredients.value.trim();
+        return selected + (extra ? ', ' + extra : '');
+      }
+
+      async function getSuggestions() {
+        if (!getAllIngredients() && !extraIngredients.value.trim()) {
+          showToast('เลือกวัตถุดิบก่อนน้าา', 'warn', '🐾');
+          return;
+        }
+        suggestLoading.value = true;
+        selectedSuggestionIndex.value = null;
+        try {
+          const res = await fetch(BASE + '/suggest', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              ingredients: getAllIngredients(),
+              tools: tools.value.join(', '),
+              method: cookingMethod.value || 'ตามสะดวก',
+              notes: cookingNotes.value
+            })
+          });
+          const data = await res.json();
+          suggestions.value = (data.suggestions || []).slice(0, 5);
+          cookingStep.value = 'suggestions';
+        } catch (e) {
+          showToast('บิงกัสคิดไม่ออก ลองใหม่อีกทีน้า', 'error', '😿');
+        } finally {
+          suggestLoading.value = false;
+        }
+      }
+
+      function selectSuggestion(r) {
+        const idx = suggestions.value.indexOf(r);
+        selectedSuggestionIndex.value = selectedSuggestionIndex.value === idx ? null : idx;
+      }
+
+      async function getRecipeDetail() {
+        const r = suggestions.value[selectedSuggestionIndex.value];
+        if (!r) return;
+        detailLoading.value = true;
+        cookingStep.value = 'detail';
+        try {
+          const res = await fetch(BASE + '/detail', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: r.name,
+              ingredients: getAllIngredients(),
+              tools: tools.value.join(', '),
+              method: cookingMethod.value || 'ตามสะดวก',
+              notes: cookingNotes.value
+            })
+          });
+          const data = await res.json();
+          const prep = (data.prep_steps || []).map((s, i) => ({ ...s, _done: false, _type: 'prep', _uid: 'prep-' + i }));
+          const cook = (data.cook_steps || []).map((s, i) => ({ ...s, _done: false, _type: 'cook', _uid: 'cook-' + i }));
+          if (!prep.length && !cook.length && data.steps) {
+            const fallback = data.steps.map((s, i) => ({ ...s, _done: false, _type: 'cook', _uid: 'cook-' + i }));
+            data.prep_steps = [];
+            data.cook_steps = fallback;
+            data.steps = fallback;
+          } else {
+            data.steps = [...prep, ...cook];
+            data.prep_steps = prep;
+            data.cook_steps = cook;
+          }
+          data.missing_ingredients = data.missing_ingredients || [];
+          currentRecipe.value = data;
+          missingChecked.value = [];
+          detailLoading.value = false;
+          cookingStep.value = 'detail';
+          nextTick(() => {
+            drawNutritionChart();
+            updateBingusContext();
+          });
+          // init timers
+          timers.value = {};
+          data.steps.forEach(s => {
+            timers.value[s._uid] = { remaining: s.timer * 60 || 0, _running: false };
+          });
+        } catch (e) {
+          detailLoading.value = false;
+          showToast('บิงกัสหาสูตรไม่เจอ ลองใหม่อีกครั้ง', 'error', '😿');
+        }
+      }
+
+      function n(key) { return currentRecipe.value?.nutrition?.[key]; }
+
+      function drawNutritionChart() {
+        if (!nutritionChartRef.value || !currentRecipe.value?.nutrition) return;
+        if (nutritionChartInstance) nutritionChartInstance.destroy();
+        const ctx = nutritionChartRef.value.getContext('2d');
+        const n = currentRecipe.value.nutrition;
+        nutritionChartInstance = new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: ['โปรตีน', 'คาร์บ', 'ไขมัน', 'ไฟเบอร์'],
+            datasets: [{
+              data: [n.protein || 0, n.carbs || 0, n.fat || 0, n.fiber || 0],
+              backgroundColor: ['#D4745C', '#D4A574', '#B8A08E', '#6B8B3A'],
+              borderWidth: 0
+            }]
+          },
+          options: {
+            cutout: '65%',
+            plugins: { legend: { display: false } },
+            responsive: true,
+            maintainAspectRatio: true
+          }
+        });
+      }
+
+      // ── Timer ──
+      const timers = ref({});
+      let timerInterval = null;
+
+      function startTimer(uid, minutes) {
+        if (!timers.value[uid]) timers.value[uid] = { remaining: minutes * 60, _running: false };
+        if (timers.value[uid]._running) return;
+        timers.value[uid]._running = true;
+        if (timerInterval) clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+          let anyRunning = false;
+          Object.keys(timers.value).forEach(k => {
+            if (timers.value[k]?._running) {
+              if (timers.value[k].remaining > 0) {
+                timers.value[k].remaining--;
+                anyRunning = true;
+              }
+              if (timers.value[k].remaining <= 0 && timers.value[k]._running) {
+                timers.value[k]._running = false;
+                try {
+                  const audio = new Audio("data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACAf39/f4B/f3+AgH9/f3+AgH9/f3+AgH9/f3+AgICAf39/f4B/f3+AgH9/f3+AgH9/f4CAf39/f4B/f3+AgH9/f3+AgICAf39/f4B/f3+AgH9/f3+AgH9/f3+AgH9/f3+AgH9/f4B/f4B/f3+AgICAf39/f4B/f3+AgH9/f3+AgH9/f3+AgH9/f3+AgH9/f3+AgH9/f3+AgH9/gICAf39/f4B/f3+AgH9/f3+AgH9/f4B/f3+AgH9/f3+AgH9/f4CAf39/f4B/f4B/f3+AgH9/f4CAf39/gICAf39/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgH9/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgH9/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgH9/f4B/f3+AgH9/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgICAf39/f4B/f4B/f3+AgICAf39/f4B/f3+AgH9/f3+AgH9/f4B/f3+AgH9/f4B/f4B/f3+AgICAf39/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgH9/f4CAf39/f4B/f3+AgICAf39/f4B/f3+AgH9/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgH9/f4CAf39/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgH9/f4B/f3+AgH9/f4CAf39/f4B/f4B/f3+AgH9/f4CAf39/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgH9/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgICAf39/f4B/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgICAf39/f4B/f3+AgH9/f4B/f4B/f3+AgH9/f4B/f3+AgH9/f3+AgH9/f4CAf39/f4B/f3+AgH9/f4CAf39/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgH9/f4B/f3+AgH9/f4CAf39/f4B/f4B/f3+AgH9/f4CAf39/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgH9/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgH9/f3+AgH9/f4CAf39/f4B/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgICAf39/f4B/f3+AgH9/f4B/f3+AgH9/f4CAf39/f4B/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgICAf39/f4B/f4B/f3+AgH9/f4B/f3+AgH9/f3+AgH9/f4CAf39/f4B/f3+AgH9/f4B/f3+AgH9/f4CAf39/f4B/f4B/f3+AgH9/f4CAf39/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgH9/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgH9/f4CAf39/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgICAf39/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f4B/f3+AgH9/f4B/f3+AgH9/f3+AgH9/f4CAf39/f4B/f3+AgH9/f4CAf39/f4B/f4B/f3+AgH9/f4B/f3+AgH9/f3+AgH9/f4B/f3+AgH9/f4CAf39/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f4B/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgH9/f4CAf39/f4B/f3+AgICAf39/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgH9/f4B/f3+AgH9/f4CAf39/f4B/f3+AgH9/f4B/f3+AgH9/f3+AgH9/f4CAf39/f4B/f4B/f3+AgH9/f4B/f3+AgH9/f4CAf39/f4B/f3+AgH9/f4CAf39/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f4B/f3+AgH9/f4B/f4B/f3+AgH9/f4CAf39/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgH9/f4CAf39/f4B/f3+AgH9/f4CAf39/f4B/f4B/f3+AgH9/f4B/f3+AgH9/f3+AgH9/f4CAf39/f4B/f3+AgH9/f4CAf39/f4B/f3+AgICAf39/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgH9/f4CAf39/f4CAf39/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f4B/f3+AgH9/f4B/f3+AgH9/f3+AgH9/f4B/f3+AgICAf39/f4B/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgH9/f4CAf39/f4B/f3+AgH9/f4B/f3+AgH9/f4CAf39/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgH9/f4B/f3+AgH9/f4CAf39/f4B/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgH9/f4CAf39/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgH9/f4CAf39/f4B/f3+AgH9/f4B/f3+AgH9/f3+AgH9/f4CAf39/f4B/f3+AgICAf39/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f3+AgICAf39/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgH9/f4B/f3+AgICAf39/f4B/f4A=");
+                  audio.play();
+                } catch {}
+                const stepNum = currentRecipe.value?.steps?.findIndex(s => s._uid === k);
+                showToast('⏰ เวลาครบแล้ว! ขั้นตอนที่ ' + ((stepNum ?? -1) + 1), 'warn', '⏰');
+              }
+            }
+          });
+          if (!anyRunning && timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+          }
+          timers.value = { ...timers.value };
+        }, 1000);
+      }
+
+      function stopTimer(uid) {
+        if (timers.value[uid]) timers.value[uid]._running = false;
+        let anyRunning = false;
+        Object.values(timers.value).forEach(t => { if (t._running) anyRunning = true; });
+        if (!anyRunning && timerInterval) {
+          clearInterval(timerInterval);
+          timerInterval = null;
+        }
+      }
+
+      function formatTimer(t) {
+        if (!t) return '0:00';
+        const m = Math.floor(t.remaining / 60);
+        const s = t.remaining % 60;
+        return m + ':' + String(s).padStart(2, '0');
+      }
+
+      // ── Gallery ──
+      const gallery = ref([]);
+      async function loadGallery() {
+        try {
+          const res = await fetch(BASE + '/gallery');
+          const data = await res.json();
+          if (data.length) {
+            gallery.value = data;
+            saveGalleryToLocal(data);
+          } else {
+            gallery.value = loadGalleryFromLocal();
+          }
+        } catch {
+          gallery.value = loadGalleryFromLocal();
+        }
+      }
+
+      async function saveToGallery() {
+        let imgUrl = '';
+        if (imageFile.value) {
+          const form = new FormData();
+          form.append('file', imageFile.value);
+          const uploadRes = await fetch(BASE + '/upload', { method: 'POST', body: form });
+          const uploadData = await uploadRes.json();
+          imgUrl = uploadData.url;
+        }
+        await fetch(BASE + '/save-recipe', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: currentRecipe.value.name,
+            description: currentRecipe.value.description || '',
+            nutrition: currentRecipe.value.nutrition || {},
+            steps: currentRecipe.value.steps.map(s => ({ text: s.text, timer: s.timer, type: s._type || 'cook' })),
+            note: userNote.value,
+            image_url: imgUrl
+          })
+        });
+        // also save locally for Vercel cold-start resilience
+        const newEntry = {
+          id: Date.now(), name: currentRecipe.value.name,
+          description: currentRecipe.value.description || '',
+          nutrition: currentRecipe.value.nutrition || {},
+          steps: currentRecipe.value.steps.map(s => ({ text: s.text, timer: s.timer, type: s._type || 'cook' })),
+          note: userNote.value, image_url: imgUrl, created_at: new Date().toISOString()
+        };
+        const local = loadGalleryFromLocal();
+        local.unshift(newEntry);
+        saveGalleryToLocal(local);
+        showToast('🎉 บันทึก ' + currentRecipe.value.name + ' ลงแกลเลอรี่แล้ว!', 'success', '🎉');
+        await loadGallery();
+        // navigate to gallery
+        page.value = 'gallery';
+        // reset cooking
+        cookingStep.value = 'input';
+        currentRecipe.value = null;
+        userNote.value = '';
+        imagePreview.value = '';
+        imageFile.value = null;
+        selectedIngredients.value = [];
+        extraIngredients.value = '';
+        cookingMethod.value = '';
+        cookingNotes.value = '';
+        suggestions.value = [];
+        selectedSuggestionIndex.value = null;
+      }
+
+      async function deleteFromGallery(id) {
+        const ok = await showConfirm('ลบเมนูนี้ทิ้งเลยเหรอ? 🥺');
+        if (!ok) return;
+        await fetch(BASE + '/gallery/' + id, { method: 'DELETE' });
+        // also remove from local
+        const local = loadGalleryFromLocal().filter(e => e.id !== id);
+        saveGalleryToLocal(local);
+        showToast('ลบแล้วนะ', 'warn', '🗑️');
+        loadGallery();
+      }
+
+      function cookAgain(item) {
+        const raw = (item.steps || []).map((s, i) => ({ text: s.text || s, timer: s.timer || 0, _done: false, _type: s.type || 'cook', _uid: (s.type || 'cook') + '-' + i }));
+        const prep = raw.filter(s => s._type === 'prep');
+        const cook = raw.filter(s => s._type === 'cook');
+        // re-assign _uid for each group
+        prep.forEach((s, i) => s._uid = 'prep-' + i);
+        cook.forEach((s, i) => s._uid = 'cook-' + i);
+        currentRecipe.value = {
+          name: item.name,
+          description: item.description || '',
+          nutrition: item.nutrition || {},
+          steps: [...prep, ...cook],
+          prep_steps: prep,
+          cook_steps: cook,
+          missing_ingredients: []
+        };
+        missingChecked.value = [];
+        userNote.value = '';
+        imagePreview.value = '';
+        imageFile.value = null;
+        cookingStep.value = 'detail';
+        page.value = 'cooking';
+        nextTick(() => {
+          drawNutritionChart();
+          updateBingusContext();
+        });
+        timers.value = {};
+        currentRecipe.value.steps.forEach(s => {
+          timers.value[s._uid] = { remaining: s.timer * 60 || 0, _running: false };
+        });
+      }
+
+      async function handleImageUpload(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        imageFile.value = file;
+        const reader = new FileReader();
+        reader.onload = (ev) => { imagePreview.value = ev.target.result; };
+        reader.readAsDataURL(file);
+      }
+
+      // ── Dashboard ──
+      const avgCalories = computed(() => {
+        const items = gallery.value.filter(g => g.nutrition?.calories);
+        if (!items.length) return 0;
+        return Math.round(items.reduce((s, g) => s + (g.nutrition.calories || 0), 0) / items.length);
+      });
+      const totalProtein = computed(() => {
+        return gallery.value.reduce((s, g) => s + (g.nutrition?.protein || 0), 0);
+      });
+
+      let doughnutChartInstance = null;
+      let barChartInstance = null;
+
+      function initCharts() {
+        const dc = document.getElementById('doughnutChart');
+        if (dc) {
+          if (doughnutChartInstance) doughnutChartInstance.destroy();
+          const items = gallery.value.filter(g => g.nutrition);
+          const avg = (key) => {
+            const vals = items.map(g => g.nutrition[key] || 0);
+            return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
+          };
+          const a = avg('protein'), b = avg('carbs'), c = avg('fat'), d = avg('fiber');
+          doughnutChartInstance = new Chart(dc.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+              labels: ['โปรตีน', 'คาร์บ', 'ไขมัน', 'ไฟเบอร์'],
+              datasets: [{ data: [a, b, c, d].map(v => v || 1), backgroundColor: ['#D4745C', '#D4A574', '#B8A08E', '#6B8B3A'], borderWidth: 0 }]
+            },
+            options: { cutout: '50%', aspectRatio: 1.2, plugins: { legend: { position: 'bottom', labels: { font: { family: 'Quicksand', size: 11 }, boxWidth: 12, padding: 12 } } }, responsive: true, maintainAspectRatio: true }
+          });
+        }
+        const bc = document.getElementById('barChart');
+        if (bc) {
+          if (barChartInstance) barChartInstance.destroy();
+          const recent = gallery.value.slice(0, 8).reverse();
+          barChartInstance = new Chart(bc.getContext('2d'), {
+            type: 'bar',
+            data: {
+              labels: recent.length ? recent.map(g => g.name) : ['ยังไม่มีข้อมูล'],
+              datasets: [{ label: 'แคลอรี่', data: recent.length ? recent.map(g => g.nutrition?.calories || 0) : [0], backgroundColor: '#D4A574', borderRadius: 8 }]
+            },
+            options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#F5E6D3' } }, x: { grid: { display: false }, ticks: { font: { family: 'Quicksand', size: 10 } } } }, responsive: true, maintainAspectRatio: true }
+          });
+        }
+        // also re-init on window resize
+      }
+
+      // ── Bingus Chat ──
+      const showChat = ref(false);
+      const chatMessages = ref([
+        { role: 'assistant', content: 'เหมียว! บิงกัสพร้อมช่วยทำอาหารแล้ว 🐾' }
+      ]);
+      const chatInput = ref('');
+      const chatLoading = ref(false);
+      const chatBox = ref(null);
+      const chatContext = ref({});
+
+      function updateBingusContext() {
+        if (currentRecipe.value) {
+          const all = currentRecipe.value.steps || [];
+          const doneSteps = all.filter(s => s._done).length;
+          const currentStep = all[doneSteps]?.text || 'เสร็จแล้ว!';
+          chatContext.value = {
+            recipe_name: currentRecipe.value.name,
+            current_step: currentStep
+          };
+        }
+      }
+
+      async function sendChat() {
+        if (!chatInput.value.trim()) return;
+        chatMessages.value.push({ role: 'user', content: chatInput.value });
+        chatInput.value = '';
+        chatLoading.value = true;
+        try {
+          const res = await fetch(BASE + '/chat', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              message: chatMessages.value[chatMessages.value.length - 1].content,
+              context: chatContext.value,
+              history: chatMessages.value.slice(-10)
+            })
+          });
+          const data = await res.json();
+          chatMessages.value.push({ role: 'assistant', content: data.reply || 'เหมียว?' });
+        } catch {
+          chatMessages.value.push({ role: 'assistant', content: 'เหมียว! บิงกัสขอโทษ ระบบมีปัญหา 🐾' });
+        }
+        chatLoading.value = false;
+        nextTick(() => {
+          if (chatBox.value) chatBox.value.scrollTop = chatBox.value.scrollHeight;
+        });
+      }
+
+      // ── Lifecycle ──
+      onMounted(() => {
+        loadKitchen();
+        loadGallery();
+        if (page.value === 'dashboard') setTimeout(initCharts, 300);
+      });
+
+      return {
+        navItems, page, navigateTo,
+        tools, pantry, presetPantry, newTool, newPantry, addTool, addPantry, removePantry, loadKitchen, saveKitchen,
+        availableMethods, cookingStep, selectedIngredients, extraIngredients, cookingMethod, cookingNotes,
+        toggleIngredient, getAllIngredients,
+        suggestions, suggestLoading, detailLoading, selectedSuggestionIndex, getSuggestions, selectSuggestion,
+        getRecipeDetail, currentRecipe, userNote, n, nutritionChartRef,
+        imageFile, imagePreview, handleImageUpload, missingChecked, toggleMissing, adjustForMissing,
+        timers, startTimer, stopTimer, formatTimer,
+        gallery, loadGallery, saveToGallery, deleteFromGallery, cookAgain,
+        avgCalories, totalProtein, initCharts, waitForCharts,
+        showChat, chatMessages, chatInput, chatLoading, chatBox, chatContext, sendChat, updateBingusContext,
+        toast, confirmDialog, showToast, showConfirm, confirmAnswer
+      };
+    }
+  }).mount('#app');
+  </script>
+
+  <style>
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #D4A574; border-radius: 3px; }
+
+    /* Transitions */
+    .fade-enter-active, .fade-leave-active { transition: opacity 0.2s ease; }
+    .fade-enter-from, .fade-leave-to { opacity: 0; }
+    .chat-enter-active, .chat-leave-active { transition: all 0.3s ease; }
+    .chat-enter-from, .chat-leave-to { opacity: 0; transform: translateY(20px) scale(0.95); }
+    .toast-enter-active { transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    .toast-leave-active { transition: all 0.3s ease; }
+    .toast-enter-from { opacity: 0; transform: translate(-50%, -20px) scale(0.9); }
+    .toast-leave-to { opacity: 0; transform: translate(-50%, -10px) scale(0.95); }
+
+    /* Line clamp */
+    .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+    /* Spinner */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .animate-spin { animation: spin 1s linear infinite; }
+
+    /* Safe area for mobile bottom nav */
+    .safe-area-bottom {
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+  </style>
+</body>
+</html>
