@@ -875,6 +875,10 @@
               method: cookingMethod.value || 'any',
               notes: cookingNotes.value,
               locale: locale.value
+            })
+          });
+          const data = await res.json();
+          suggestions.value = (data.suggestions || []).slice(0, 5);
           cookingStep.value = 'suggestions';
         } catch (e) {
           showToast(t('suggest_error'), 'error', '😿');
@@ -903,6 +907,10 @@
               method: cookingMethod.value || 'any',
               notes: cookingNotes.value,
               locale: locale.value
+            })
+          });
+          const data = await res.json();
+          const prep = (data.prep_steps || []).map((s, i) => ({ ...s, _done: false, _type: 'prep', _uid: 'prep-' + i }));
           const cook = (data.cook_steps || []).map((s, i) => ({ ...s, _done: false, _type: 'cook', _uid: 'cook-' + i }));
           if (!prep.length && !cook.length && data.steps) {
             const fallback = data.steps.map((s, i) => ({ ...s, _done: false, _type: 'cook', _uid: 'cook-' + i }));
