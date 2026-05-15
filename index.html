@@ -752,7 +752,7 @@
       const availableMethods = computed(() => {
         const userTools = tools.value.map(t => t.toLowerCase());
         return Object.entries(methodToTool)
-          .filter(([_, needed]) => needed.length === 0 || needed.some(n => userTools.some(t => t.includes(n))))
+          .filter(([_, needed]) => needed.length === 0 || needed.some(n => userTools.some(t => t.includes(n.toLowerCase()))))
           .map(([m]) => m);
       });
       const cookingStep = ref('input');
