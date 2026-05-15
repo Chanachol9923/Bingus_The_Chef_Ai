@@ -672,9 +672,8 @@
       // ── Navigation ──
       const navItems = computed(() => [
         { id: 'kitchen', label: t('nav_kitchen'), icon: '🏠' },
-        { id: 'kitchen', label: 'Your Kitchen', icon: '🏠' },
-        { id: 'cooking', label: 'Cooking Now', icon: '🍳' },
-        { id: 'gallery', label: 'Food Gallery', icon: '🖼️' },
+        { id: 'cooking', label: t('nav_cooking'), icon: '🍳' },
+        { id: 'gallery', label: t('nav_gallery'), icon: '🖼️' },
         { id: 'dashboard', label: t('nav_dashboard'), icon: '📊' },
       ]);
       const page = ref('cooking');
