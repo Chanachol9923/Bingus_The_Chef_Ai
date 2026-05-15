@@ -7,7 +7,6 @@ from typing import Optional
 import json, sqlite3, os, uuid, re
 from pathlib import Path
 from openai import OpenAI
-import tempfile
 
 app = FastAPI()
 
@@ -18,7 +17,6 @@ client = OpenAI(
     base_url="https://api.opentyphoon.ai/v1"
 )
 
-import tempfile
 UPLOAD_DIR = Path(os.getenv("BINGUS_UPLOAD_DIR", "uploads"))
 UPLOAD_DIR.mkdir(exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
@@ -122,40 +120,40 @@ class ChatRequest(BaseModel):
 # ── Endpoints ──
 
 FALLBACK_SUGGESTIONS = [
-    {"name": "ข้าวผัดไข่", "calories": 320, "description": "ข้าวสวย 2 ถ้วย ไข่ 2 ฟอง ต้นหอม ซีอิ๊วขาว พริกไทย", "emoji": "🍚", "ingredients": ["ข้าวสวย", "ไข่", "ต้นหอม", "ซีอิ๊วขาว", "พริกไทย", "น้ำมันพืช"], "missing": ["ข้าวสวย", "ต้นหอม"]},
-    {"name": "ไข่เจียวหมูสับ", "calories": 280, "description": "ไข่ 3 ฟอง หมูสับ 100g ต้นหอมซอย น้ำปลา พริกไทย", "emoji": "🍳", "ingredients": ["ไข่", "หมูสับ", "ต้นหอม", "น้ำปลา", "พริกไทย", "น้ำมันพืช"], "missing": ["หมูสับ", "ต้นหอม"]},
-    {"name": "ผัดผักรวมมิตร", "calories": 150, "description": "ผักรวม 300g กระเทียม ซอสหอยนางรม น้ำมันหอย", "emoji": "🥬", "ingredients": ["ผักรวม", "กระเทียม", "ซอสหอยนางรม", "น้ำมันพืช"], "missing": ["ผักรวม", "ซอสหอยนางรม"]},
-    {"name": "ยำไข่ต้ม", "calories": 220, "description": "ไข่ต้ม 3 ฟอง หอมใหญ่ พริก มะนาว น้ำปลา ผักชี", "emoji": "🥗", "ingredients": ["ไข่", "หอมใหญ่", "พริก", "มะนาว", "น้ำปลา", "ผักชี"], "missing": ["มะนาว", "หอมใหญ่", "ผักชี"]},
-    {"name": "ก๋วยเตี๋ยวน้ำใสหมู", "calories": 300, "description": "เส้นหมี่ 200g หมูเด้ง หมูสับ ถั่วงอก ผักชี ต้นหอม", "emoji": "🍜", "ingredients": ["เส้นหมี่", "หมูเด้ง", "หมูสับ", "ถั่วงอก", "ผักชี", "ต้นหอม"], "missing": ["เส้นหมี่", "ถั่วงอก", "ผักชี"]}
+    {"name": "Fried Rice with Egg", "calories": 320, "description": "2 cups rice, 2 eggs, green onion, soy sauce, pepper", "emoji": "🍚", "ingredients": ["Rice", "Eggs", "Green onion", "Soy sauce", "Pepper", "Cooking oil"], "missing": ["Rice", "Green onion"]},
+    {"name": "Minced Pork Omelette", "calories": 280, "description": "3 eggs, 100g minced pork, green onion, fish sauce, pepper", "emoji": "🍳", "ingredients": ["Eggs", "Minced pork", "Green onion", "Fish sauce", "Pepper", "Cooking oil"], "missing": ["Minced pork", "Green onion"]},
+    {"name": "Stir-fried Mixed Vegetables", "calories": 150, "description": "300g mixed veggies, garlic, oyster sauce", "emoji": "🥬", "ingredients": ["Mixed vegetables", "Garlic", "Oyster sauce", "Cooking oil"], "missing": ["Mixed vegetables", "Oyster sauce"]},
+    {"name": "Boiled Egg Salad", "calories": 220, "description": "3 boiled eggs, onion, chili, lime, fish sauce, cilantro", "emoji": "🥗", "ingredients": ["Eggs", "Onion", "Chili", "Lime", "Fish sauce", "Cilantro"], "missing": ["Lime", "Onion", "Cilantro"]},
+    {"name": "Clear Soup with Pork", "calories": 300, "description": "200g rice noodles, pork balls, minced pork, bean sprouts, cilantro, green onion", "emoji": "🍜", "ingredients": ["Rice noodles", "Pork balls", "Minced pork", "Bean sprouts", "Cilantro", "Green onion"], "missing": ["Rice noodles", "Bean sprouts", "Cilantro"]}
 ]
 
 @app.post("/suggest")
 async def suggest_recipes(req: SuggestRequest):
-    prompt = f"""วัตถุดิบในครัว: {req.ingredients}
-อุปกรณ์ที่มีให้ใช้: {req.tools}
-วิธีปรุงที่ต้องการ: {req.method}
-หมายเหตุเพิ่มเติม: {req.notes}
+    prompt = f"""Kitchen ingredients: {req.ingredients}
+Available tools/equipment: {req.tools}
+Preferred cooking method: {req.method}
+Additional notes: {req.notes}
 
-แนะนำเมนูที่ใช้อุปกรณ์เท่าที่มี"""
-    system = """You are Bingus Chef, a realistic Thai home cook. Recommend ONLY dishes that can ACTUALLY BE MADE with the user's available tools and ingredients.
+Suggest recipes that work with the available equipment."""
+    system = """You are Bingus Chef, a realistic home cook. Recommend ONLY dishes that can ACTUALLY BE MADE with the user's available tools and ingredients.
 
 TOOL-FIRST RULES (MOST IMPORTANT):
-- Analyze tools FIRST. If user has only กระทะ + เตา → only stir-fry, deep-fry, fried rice dishes.
-- If user has หม้อ → soups, curries, boiled dishes.
-- If user has หม้อหุงข้าว → rice dishes, steamed dishes.
-- If user has NO heat source → cold dishes only (ยำ, น้ำตก, ลาบ — no cooking required).
-- NEVER suggest a dish that requires heat if user has no stove/fire.
-- NEVER suggest a dish that requires an oven if user has none.
-- If tools are very limited, suggest fewer dishes (even 1-2 is fine) rather than forcing unrealistic suggestions.
+- Analyze tools FIRST. Only pan + stove → stir-fry, deep-fry, fried rice.
+- Only pot → soups, curries, boiled dishes.
+- Only rice cooker → rice dishes, steamed dishes.
+- NO heat source → cold dishes only (salads, no cooking required).
+- NEVER suggest a dish requiring heat if user has no stove.
+- NEVER suggest a dish requiring an oven if user has none.
+- If tools are very limited, suggest fewer dishes (even 1-2 is fine).
 
 INGREDIENT RULES:
 - Base on ingredients user has. Simple ingredients = simple dishes.
 - "missing" = minimal extra ingredients needed. Keep it short.
 
-OUTPUT: up to 5 suggestions, but can be fewer if tools are limited.
+OUTPUT: up to 5 suggestions, can be fewer if tools limited.
 Output ONLY valid JSON. No markdown, no code blocks.
 {"suggestions": [
-  {"name": "ผัดกระเพราไก่", "calories": 350, "description": "ไก่ 200g กระเทียม พริก ใบกระเพรา ซอสปรุงรส", "emoji": "🍳", "ingredients": ["เนื้อไก่", "กระเทียม", "พริก", "ใบกระเพรา", "ซอสปรุงรส", "น้ำปลา", "น้ำตาล"], "missing": ["ใบกระเพรา"]}
+  {"name": "Stir-fried Basil Chicken", "calories": 350, "description": "200g chicken, garlic, chili, basil, seasoning sauce", "emoji": "🍳", "ingredients": ["Chicken", "Garlic", "Chili", "Basil", "Seasoning sauce", "Fish sauce", "Sugar"], "missing": ["Basil"]}
 ]}"""
     try:
         res = client.chat.completions.create(
@@ -173,45 +171,45 @@ Output ONLY valid JSON. No markdown, no code blocks.
 
 @app.post("/detail")
 async def get_recipe_detail(req: DetailRequest):
-    prompt = f"""เมนู: {req.name}
-วัตถุดิบที่มี: {req.ingredients}
-อุปกรณ์ที่มีให้ใช้: {req.tools}
-วิธีปรุง: {req.method}
-หมายเหตุ: {req.notes}
+    prompt = f"""Recipe: {req.name}
+Available ingredients: {req.ingredients}
+Available tools: {req.tools}
+Cooking method: {req.method}
+Notes: {req.notes}
 
-ให้สูตรละเอียดของเมนูนี้ ใช้ได้จริง ทำตามได้จริง"""
-    system = """You are Bingus Chef, a realistic Thai home cook. Give a detailed recipe that ACTUALLY WORKS in a real kitchen.
+Give a detailed recipe that actually works."""
+    system = """You are Bingus Chef, a realistic home cook. Give a detailed recipe that ACTUALLY WORKS in a real kitchen.
 
 REALISM RULES:
-- Only include ingredients and steps that make sense for this specific dish. Don't add random extras.
-- Quantities must be realistic (e.g. น้ำปลา 2 tbsp for a stir-fry, not 1 tsp or 1 cup).
-- CHECK user's tools. Only include steps that use tools the user HAS. No heat source → only cold-prep steps.
-- NEVER reference a tool the user doesn't have (e.g. don't say "เปิดเตาอบ" if no oven, don't say "ตั้งกระทะ" if no stove).
-- Steps must follow real cooking order and technique for this Thai dish.
+- Only include ingredients and steps that make sense for this specific dish. No random extras.
+- Quantities must be realistic (e.g. 2 tbsp fish sauce for stir-fry, not 1 tsp or 1 cup).
+- CHECK user's tools. Only include steps using the tools the user HAS. No heat source → cold-prep only.
+- NEVER reference a tool the user doesn't have (e.g. don't say "preheat oven" if no oven).
+- Steps must follow real cooking order and technique for this dish.
 - "ingredients": complete list of every ingredient needed, with quantities.
-- prep_steps = preparing ingredients with exact quantities (e.g. "หั่นหมู 200g เป็นชิ้นบาง", "ตำพริกกระเทียม 3-4 เม็ด")
+- prep_steps = preparing ingredients with exact quantities (e.g. "Slice 200g pork into thin pieces")
 - cook_steps = actual cooking process (heat, fry, boil, season, plate)
-- timer = minutes. 0 means no timer needed. Only set timer if that step genuinely needs waiting (boiling, simmering, steaming).
+- timer = minutes. 0 = no timer. Only set timer if that step genuinely needs waiting (boiling, simmering, steaming).
 - nutrition = realistic values for this dish
 - missing_ingredients = what user needs to buy, keep it real
 
 Output ONLY valid JSON. No markdown, no code blocks.
 {
-  "name": "ผัดกระเพราไก่",
-  "description": "เมนูผัดกระเพราไก่ ใช้ไก่ 200g กระเทียม พริก ใบกระเพรา ซอสปรุงรส",
+  "name": "Stir-fried Basil Chicken",
+  "description": "Stir-fried basil chicken with 200g chicken, garlic, chili, basil, seasoning sauce",
   "nutrition": {"protein": 28, "carbs": 10, "fat": 22, "fiber": 2, "calories": 350},
-  "ingredients": ["เนื้อไก่ 200g", "กระเทียม 5 กลีบ", "พริก 3-4 เม็ด", "ใบกระเพรา", "น้ำปลา 1 tbsp", "ซีอิ๊วขาว 1 tbsp", "น้ำตาล 1/2 tsp", "น้ำมันพืช"],
+  "ingredients": ["200g chicken thigh", "5 cloves garlic", "3-4 bird chilies", "1 cup basil leaves", "1 tbsp fish sauce", "1 tbsp soy sauce", "1/2 tsp sugar", "1 tbsp oil"],
   "prep_steps": [
-    {"text": "หั่นเนื้อไก่ 200g เป็นชิ้นพอคำ", "timer": 0},
-    {"text": "ตำกระเทียม 5 กลีบ + พริก 3-4 เม็ด", "timer": 0}
+    {"text": "Slice 200g chicken into bite-sized pieces", "timer": 0},
+    {"text": "Pound 5 garlic cloves + 3-4 chilies", "timer": 0}
   ],
   "cook_steps": [
-    {"text": "ตั้งกระทะ ใส่น้ำมัน 1 tbsp ผัดกระเทียมพริกให้หอม", "timer": 0},
-    {"text": "ใส่ไก่ ผัดจนสุก ประมาณ 3 นาที", "timer": 3},
-    {"text": "ปรุงรสด้วยน้ำปลา 1 tbsp ซีอิ๊วขาว 1 tbsp น้ำตาล 1/2 tsp", "timer": 0},
-    {"text": "ใส่ใบกระเพรา ผัดเร็วๆ ปิดไฟ", "timer": 0}
+    {"text": "Heat pan with 1 tbsp oil, fry garlic and chili until fragrant", "timer": 0},
+    {"text": "Add chicken, stir-fry until cooked through, about 3 minutes", "timer": 3},
+    {"text": "Season with 1 tbsp fish sauce, 1 tbsp soy sauce, 1/2 tsp sugar", "timer": 0},
+    {"text": "Toss in basil leaves, stir quickly, turn off heat", "timer": 0}
   ],
-  "missing_ingredients": ["ใบกระเพรา"]
+  "missing_ingredients": ["Basil leaves"]
 }"""
     try:
         res = client.chat.completions.create(
@@ -228,9 +226,9 @@ Output ONLY valid JSON. No markdown, no code blocks.
 @app.post("/chat")
 async def chat_with_bingus(req: ChatRequest):
     ctx = req.context or {}
-    context_str = f"กำลังทำ: {ctx.get('recipe_name', '')}, ขั้นตอนปัจจุบัน: {ctx.get('current_step', '')}"
+    context_str = f"Cooking: {ctx.get('recipe_name', '')}, Current step: {ctx.get('current_step', '')}"
     messages = [
-        {"role": "system", "content": f"คุณคือ Bingus Chef พ่อครัวแมวน้อย ขี้เล่น เป็นกันเอง ตอบสั้นๆ ภาษาไทย ไม่เกิน 3-4 ประโยค ให้คำแนะนำการทำอาหารที่ใช้ได้จริง เหมาะสมกับเมนูนั้นๆ\n{context_str}"}
+        {"role": "system", "content": f"You are Bingus Chef, a cute little cat chef. Friendly, playful, keep replies short (2-3 sentences). Give practical cooking advice.\n{context_str}"}
     ]
     for h in req.history[-8:]:
         messages.append({"role": h["role"], "content": h["content"]})
@@ -242,7 +240,7 @@ async def chat_with_bingus(req: ChatRequest):
         )
         return {"reply": res.choices[0].message.content}
     except:
-        return {"reply": "เหมียว! บิงกัสขอโทษ อิ้งฉ่อยมีปัญหา แก้ไขก่อนนะ 🐾"}
+        return {"reply": "Meow! Bingus is sorry, having trouble connecting. Try again later 🐾"}
 
 @app.post("/save-recipe")
 async def save_recipe(req: SaveRecipeRequest):
@@ -290,7 +288,7 @@ async def get_kitchen():
     conn.close()
     if row:
         return {"tools": json.loads(row["tools"]), "pantry": json.loads(row["pantry"])}
-    defaults = {"tools": [], "pantry": ["เกลือ", "พริกไทย", "น้ำปลา", "น้ำตาล", "น้ำมันพืช", "ซีอิ๊วขาว", "ซอสหอยนางรม", "ผงปรุงรส", "กระเทียม", "หอมแดง"]}
+    defaults = {"tools": [], "pantry": ["Salt", "Black pepper", "Fish sauce", "Sugar", "Cooking oil", "Soy sauce", "Oyster sauce", "Seasoning powder", "Garlic", "Shallot"]}
     return defaults
 
 @app.post("/kitchen")

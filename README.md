@@ -1,48 +1,48 @@
 # 🐱 Bingus Chef
 
-ผู้ช่วยทำอาหาร AI ภาษาไทย — ให้ AI แนะนำเมนูจากวัตถุดิบที่มี พร้อมขั้นตอนละเอียด จับเวลา และแกลเลอรี่
+AI cooking assistant — AI suggests recipes from your ingredients, with detailed steps, timers, and a gallery.
 
 ## Features
 
-- **🍳 ค้นหาเมนู** — เลือกวัตถุดิบที่มี + วิธีทำ → AI เสนอเมนูที่ทำได้จริง
-- **📋 ขั้นตอนละเอียด** — แยกเตรียมวัตถุดิบ / ขั้นตอนทำ มีจับเวลาในตัว
-- **🛒 ปรับสูตร** — ถ้าวัตถุดิบไม่ครบ กดปรับสูตรให้ AI คิดใหม่
-- **🖼️ แกลเลอรี่** — บันทึกเมนูที่ทำแล้ว ดูย้อนหลัง
-- **📊 Dashboard** — สถิติสารอาหาร แคลอรี่แต่ละเมนู
-- **🐱 Bingus Chat** — พูดคุยกับแมวน้อยผู้ช่วยทำอาหาร
+- **🍳 Find Recipes** — Pick your ingredients + cooking method → AI suggests real recipes
+- **📋 Detailed Steps** — Separated prep / cook steps with built-in timers
+- **🛒 Adjust Recipe** — Missing ingredients? Tap to have AI adjust the recipe
+- **🖼️ Gallery** — Save and browse your completed recipes
+- **📊 Dashboard** — Nutrition stats, calorie chart per meal
+- **🐱 Bingus Chat** — Chat with the cute cat cooking assistant
 
 ## Tech Stack
 
-| ชั้น | เทคโนโลยี |
-|------|-----------|
+| Layer | Technology |
+|-------|-----------|
 | Frontend | Vue 3 + Tailwind CSS + Chart.js (single HTML) |
 | Backend | FastAPI (Python) |
 | AI | Typhoon v2.5 (OpenAI-compatible API) |
 | Database | SQLite |
 | Deploy | Vercel (serverless) |
 
-## รัน Local
+## Run Locally
 
 ```bash
-# ติดตั้ง dependencies
+# Install dependencies
 pip install fastapi openai python-multipart
 
-# รัน
+# Run
 python main.py
 ```
 
-เปิด `http://localhost:5000`
+Open `http://localhost:5000`
 
-## Deploy บน Vercel
+## Deploy on Vercel
 
 ```bash
 npm i -g vercel
 vercel --prod
 ```
 
-ตั้ง Environment Variable: `TYPHOON_API_KEY` (ไม่ต้องตั้งก็ได้ มี key default ให้)
+Set Environment Variable: `TYPHOON_API_KEY` (optional, a default key is provided)
 
-### ข้อจำกัดบน Vercel
-- ข้อมูล Gallery / Kitchen จะหายเมื่อ instance ถูกปิด (serverless)
-- รูปที่อัปโหลดจะไม่คงอยู่
-- ถ้าต้องการ persistent → เปลี่ยนไปใช้ PostgreSQL หรือ Vercel KV
+### Vercel Limitations
+- Gallery / Kitchen data is lost when the instance is recycled (serverless)
+- Uploaded images are not persisted
+- For persistence → switch to PostgreSQL or Vercel KV
