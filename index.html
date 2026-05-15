@@ -737,17 +737,17 @@
 
       // ── Cooking ──
       const methodToTool = {
-        'Stir-fry': ['Pan', 'Stove', 'Electric stove'],
-        'Deep-fry': ['Pan', 'Stove', 'Electric stove', 'Air fryer'],
-        'Boil': ['Pot', 'Stove', 'Electric stove', 'Kettle'],
-        'Curry': ['Pot', 'Stove', 'Electric stove'],
-        'Stew': ['Pot', 'Stove', 'Electric stove', 'Slow cooker'],
-        'Steam': ['Steamer', 'Steam pot', 'Rice cooker'],
-        'Grill': ['Oven', 'Grill', 'Grill pan'],
-        'Bake': ['Oven', 'Microwave'],
-        'Roast': ['Grill', 'Roaster'],
-        'Pan-fry': ['Pan', 'Stove', 'Electric stove'],
-        'Sous-vide': ['Sous-vide']
+        'Stir-fry': ['Pan', 'Stove', 'Electric stove', 'กระทะ', 'เตา', 'เตาไฟฟ้า'],
+        'Deep-fry': ['Pan', 'Stove', 'Electric stove', 'Air fryer', 'กระทะ', 'เตา', 'เตาไฟฟ้า', 'หม้อทอดไร้น้ำมัน'],
+        'Boil': ['Pot', 'Stove', 'Electric stove', 'Kettle', 'หม้อ', 'เตา', 'เตาไฟฟ้า', 'กาต้มน้ำ'],
+        'Curry': ['Pot', 'Stove', 'Electric stove', 'หม้อ', 'เตา', 'เตาไฟฟ้า'],
+        'Stew': ['Pot', 'Stove', 'Electric stove', 'Slow cooker', 'หม้อ', 'เตา', 'เตาไฟฟ้า', 'หม้อตุ๋น'],
+        'Steam': ['Steamer', 'Steam pot', 'Rice cooker', 'ซึ้ง', 'หม้อนึ่ง', 'หม้อหุงข้าว'],
+        'Grill': ['Oven', 'Grill', 'Grill pan', 'เตาอบ', 'เตาย่าง', 'กระทะย่าง'],
+        'Bake': ['Oven', 'Microwave', 'เตาอบ', 'ไมโครเวฟ'],
+        'Roast': ['Grill', 'Roaster', 'เตาย่าง', 'เตาปิ้ง'],
+        'Pan-fry': ['Pan', 'Stove', 'Electric stove', 'กระทะ', 'เตา', 'เตาไฟฟ้า'],
+        'Sous-vide': ['Sous-vide', 'ซูวี']
       };
       const availableMethods = computed(() => {
         const userTools = tools.value.map(t => t.toLowerCase());
