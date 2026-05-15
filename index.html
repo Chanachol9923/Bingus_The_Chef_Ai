@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en" :lang="locale">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -25,6 +25,13 @@
         <span class="text-xl">{{ item.icon }}</span>
         <span>{{ item.label }}</span>
       </div>
+      <!-- Language toggle -->
+      <button @click="toggleLocale"
+        class="flex items-center gap-3 px-4 py-3 rounded-2xl cursor-pointer transition-all duration-200 font-semibold w-full text-left mt-2"
+        style="color:#8B6914;">
+        <span class="text-xl">🌐</span>
+        <span>{{ locale === 'en' ? 'TH' : 'EN' }}</span>
+      </button>
       <div class="mt-auto pt-6 text-center text-xs" style="color:#B8A08E;">Bingus Chef v2.0 🐾</div>
     </aside>
 
@@ -37,6 +44,13 @@
         <span class="text-xl leading-none">{{ item.icon }}</span>
         <span class="text-[10px] mt-1 font-semibold">{{ item.label }}</span>
       </div>
+      <!-- Language toggle (mobile) -->
+      <div @click="toggleLocale"
+        class="flex-1 flex flex-col items-center justify-center py-2 min-h-[56px] cursor-pointer transition-all duration-200"
+        style="color:#B8A08E;">
+        <span class="text-xl leading-none">🌐</span>
+        <span class="text-[10px] mt-1 font-semibold">{{ locale === 'en' ? 'TH' : 'EN' }}</span>
+      </div>
     </nav>
 
     <!-- ═══ MAIN ═══ -->
@@ -46,13 +60,13 @@
 
         <!-- ── PAGE: KITCHEN ── -->
         <div v-if="page === 'kitchen'">
-          <h2 class="text-2xl md:text-3xl font-bold mb-2" style="color:#6B3A1F;">🏠 Kitchen Setup</h2>
-          <p class="text-sm mb-6" style="color:#8B6914;">Tell Bingus what you have in your kitchen!</p>
+          <h2 class="text-2xl md:text-3xl font-bold mb-2" style="color:#6B3A1F;">{{ t('kitchen_title') }}</h2>
+          <p class="text-sm mb-6" style="color:#8B6914;">{{ t('kitchen_subtitle') }}</p>
 
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
             <!-- Tools -->
             <div class="rounded-3xl p-4 md:p-6" style="background:white; box-shadow:0 8px 32px rgba(107,58,31,0.06);">
-              <h3 class="font-bold text-lg mb-4" style="color:#6B3A1F;">🔪 Tools</h3>
+              <h3 class="font-bold text-lg mb-4" style="color:#6B3A1F;">{{ t('tools_title') }}</h3>
               <div class="flex flex-wrap gap-2 mb-4">
                 <span v-for="t in tools" :key="t"
                   class="flex items-center gap-1 px-4 py-2 rounded-full text-sm font-medium"
@@ -60,21 +74,21 @@
                   {{ t }}
                   <button @click="tools = tools.filter(x => x !== t)" class="ml-1 text-xs hover:text-red-500">✕</button>
                 </span>
-                <span v-if="!tools.length" class="text-sm" style="color:#B8A08E;">No tools yet — add some!</span>
+                <span v-if="!tools.length" class="text-sm" style="color:#B8A08E;">{{ t('tools_empty') }}</span>
               </div>
               <div class="flex gap-2">
                 <input v-model="newTool" @keyup.enter="addTool"
                   class="flex-1 px-4 py-3 rounded-xl border-none outline-none text-sm"
-                  style="background:#FDF5E6;" placeholder="Type a tool...">
+                  style="background:#FDF5E6;" :placeholder="t('tools_placeholder')">
                 <button @click="addTool"
                   class="px-6 py-3 rounded-xl font-bold text-sm transition-all duration-200 hover:scale-105"
-                  style="background:#6B3A1F; color:white;">+ Add</button>
+                  style="background:#6B3A1F; color:white;">{{ t('tools_add') }}</button>
               </div>
             </div>
 
             <!-- Pantry staples -->
             <div class="rounded-3xl p-4 md:p-6" style="background:white; box-shadow:0 8px 32px rgba(107,58,31,0.06);">
-              <h3 class="font-bold text-lg mb-4" style="color:#6B3A1F;">🧂 Pantry</h3>
+              <h3 class="font-bold text-lg mb-4" style="color:#6B3A1F;">{{ t('pantry_title') }}</h3>
               <div class="flex flex-wrap gap-2 mb-4">
                 <template v-for="p in pantry" :key="p">
                   <span v-if="presetPantry.includes(p)"
@@ -94,10 +108,10 @@
               <div class="flex gap-2">
                 <input v-model="newPantry" @keyup.enter="addPantry"
                   class="flex-1 px-4 py-3 rounded-xl border-none outline-none text-sm"
-                  style="background:#FDF5E6;" placeholder="Type an ingredient...">
+                  style="background:#FDF5E6;" :placeholder="t('pantry_placeholder')">
                 <button @click="addPantry"
                   class="px-6 py-3 rounded-xl font-bold text-sm transition-all duration-200 hover:scale-105"
-                  style="background:#6B3A1F; color:white;">+ Add</button>
+                  style="background:#6B3A1F; color:white;">{{ t('pantry_add') }}</button>
               </div>
             </div>
           </div>
@@ -107,14 +121,14 @@
         <div v-if="page === 'cooking'" key="cooking">
           <!-- STEP: INPUT -->
           <div v-if="cookingStep === 'input'">
-            <h2 class="text-2xl md:text-3xl font-bold mb-2 text-center" style="color:#6B3A1F;">🍳 What to cook today?</h2>
-            <p class="text-sm mb-8 text-center" style="color:#8B6914;">Pick your ingredients + cooking method!</p>
+            <h2 class="text-2xl md:text-3xl font-bold mb-2 text-center" style="color:#6B3A1F;">{{ t('cooking_title') }}</h2>
+            <p class="text-sm mb-8 text-center" style="color:#8B6914;">{{ t('cooking_subtitle') }}</p>
 
             <div class="max-w-2xl mx-auto space-y-6">
               <!-- Ingredient selection -->
               <div class="rounded-3xl p-4 md:p-6" style="background:white; box-shadow:0 8px 32px rgba(107,58,31,0.06);">
-                <h3 class="font-semibold mb-3 text-sm md:text-base" style="color:#6B3A1F;">🧂 Your Ingredients</h3>
-                <div v-if="!pantry.length" class="text-sm mb-3" style="color:#B8A08E;">No ingredients in your kitchen yet — set up your kitchen first!</div>
+                <h3 class="font-semibold mb-3 text-sm md:text-base" style="color:#6B3A1F;">{{ t('ingredients_title') }}</h3>
+                <div v-if="!pantry.length" class="text-sm mb-3" style="color:#B8A08E;">{{ t('ingredients_empty') }}</div>
                 <div class="flex flex-wrap gap-2 mb-4">
                   <span v-for="p in pantry" :key="p"
                     @click="toggleIngredient(p)"
@@ -125,36 +139,36 @@
                 </div>
                 <input v-model="extraIngredients"
                   class="w-full px-4 py-3 rounded-xl border-none outline-none text-sm"
-                  style="background:#FDF5E6;" placeholder="Extra ingredients you have (e.g. 200g chicken, 3 eggs)...">
+                  style="background:#FDF5E6;" :placeholder="t('ingredients_placeholder')">
               </div>
 
               <!-- Cooking method -->
               <div class="rounded-3xl p-4 md:p-6" style="background:white; box-shadow:0 8px 32px rgba(107,58,31,0.06);">
-                <h3 class="font-semibold mb-1 text-sm md:text-base" style="color:#6B3A1F;">🔥 How to cook?</h3>
-                <p class="text-xs mb-3" style="color:#B8A08E;">🐾 Options are filtered by your kitchen equipment</p>
-                <div v-if="!availableMethods.length" class="text-sm" style="color:#B8A08E;">No equipment — set up your kitchen first!</div>
+                <h3 class="font-semibold mb-1 text-sm md:text-base" style="color:#6B3A1F;">{{ t('method_title') }}</h3>
+                <p class="text-xs mb-3" style="color:#B8A08E;">{{ t('method_hint') }}</p>
+                <div v-if="!availableMethods.length" class="text-sm" style="color:#B8A08E;">{{ t('method_empty') }}</div>
                 <div v-else class="flex flex-wrap gap-2">
                   <span v-for="m in availableMethods" :key="m"
                     @click="cookingMethod = m"
                     class="cursor-pointer px-5 py-3 rounded-xl text-sm font-medium transition-all duration-200"
                     :style="cookingMethod === m ? 'background:#6B3A1F; color:white;' : 'background:#F5E6D3; color:#6B3A1F;'">
-                    {{ m }}
+                    {{ methodLabel(m) }}
                   </span>
                 </div>
               </div>
 
               <!-- Notes -->
               <div class="rounded-3xl p-6" style="background:white; box-shadow:0 8px 32px rgba(107,58,31,0.06);">
-                <h3 class="font-semibold mb-3" style="color:#6B3A1F;">📝 Notes (optional)</h3>
+                <h3 class="font-semibold mb-3" style="color:#6B3A1F;">{{ t('notes_title') }}</h3>
                 <textarea v-model="cookingNotes"
                   class="w-full px-4 py-3 rounded-xl border-none outline-none text-sm resize-none"
-                  style="background:#FDF5E6;" rows="2" placeholder="e.g. Not too spicy, quick meal..."></textarea>
+                  style="background:#FDF5E6;" rows="2" :placeholder="t('notes_placeholder')"></textarea>
               </div>
 
               <button @click="getSuggestions"
                 class="w-full py-4 rounded-2xl font-bold text-lg transition-all duration-200 hover:scale-[1.02] active:scale-95"
                 style="background:#6B3A1F; color:white; box-shadow:0 8px 24px rgba(107,58,31,0.3);">
-                ✨ Let Bingus Chef suggest!
+                {{ t('suggest_button') }}
               </button>
             </div>
           </div>
@@ -164,9 +178,9 @@
             <div class="flex items-center gap-4 mb-6">
               <button @click="cookingStep = 'input'; suggestions = []"
                 class="text-2xl hover:scale-110 transition-all">←</button>
-              <h2 class="text-3xl font-bold" style="color:#6B3A1F;">🍽️ Suggestions</h2>
+              <h2 class="text-3xl font-bold" style="color:#6B3A1F;">{{ t('suggestions_title') }}</h2>
             </div>
-            <p class="text-sm mb-6" style="color:#8B6914;">Bingus found {{ suggestions.length }} dishes you can make! Pick one.</p>
+            <p class="text-sm mb-6" style="color:#8B6914;">{{ t('suggestions_count', { n: suggestions.length }) }}</p>
 
             <div v-if="suggestLoading" class="flex flex-col items-center py-16">
               <div class="relative mb-6">
@@ -179,8 +193,8 @@
                   <div class="w-2.5 h-2.5 rounded-full animate-bounce" style="background:#B8A08E; animation-delay:0.3s;"></div>
                 </div>
               </div>
-              <p class="font-bold" style="color:#6B3A1F;">Bingus is thinking...</p>
-              <p class="text-sm mt-1" style="color:#B8A08E;">Picking dishes that match your tools and ingredients</p>
+              <p class="font-bold" style="color:#6B3A1F;">{{ t('suggestions_loading_title') }}</p>
+              <p class="text-sm mt-1" style="color:#B8A08E;">{{ t('suggestions_loading_sub') }}</p>
             </div>
 
             <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
@@ -196,7 +210,7 @@
                   🔥 {{ r.calories }} kcal
                 </div>
                 <div v-if="r.ingredients?.length" class="mt-3 pt-3 border-t" style="border-color:#F5E6D3;">
-                  <div class="text-xs font-semibold mb-1.5" style="color:#6B3A1F;">🧂 Ingredients needed</div>
+                  <div class="text-xs font-semibold mb-1.5" style="color:#6B3A1F;">{{ t('ingredients_needed') }}</div>
                   <div class="flex flex-wrap gap-1.5">
                     <span v-for="ing in r.ingredients" :key="ing"
                       class="px-2.5 py-1 rounded-full text-xs"
@@ -206,7 +220,7 @@
                   </div>
                 </div>
                 <div v-if="r.missing?.length" class="mt-2 text-xs" style="color:#D4745C;">
-                  🛒 Need to buy: {{ r.missing.join(', ') }}
+                  🛒 {{ t('need_to_buy', { items: r.missing.join(', ') }) }}
                 </div>
               </div>
             </div>
@@ -215,7 +229,7 @@
               @click="getRecipeDetail"
               class="mt-6 w-full py-4 rounded-2xl font-bold text-lg transition-all duration-200 hover:scale-[1.02]"
               style="background:#6B3A1F; color:white; box-shadow:0 8px 24px rgba(107,58,31,0.3);">
-              ✅ Go! See recipe for {{ suggestions[selectedSuggestionIndex].name }}
+              ✅ {{ t('go_button', { name: suggestions[selectedSuggestionIndex].name }) }}
             </button>
           </div>
 
@@ -232,8 +246,8 @@
                   <div class="w-2.5 h-2.5 rounded-full animate-bounce" style="background:#B8A08E; animation-delay:0.3s;"></div>
                 </div>
               </div>
-              <p class="font-bold" style="color:#6B3A1F;">Bingus is writing the recipe...</p>
-              <p class="text-sm mt-1" style="color:#B8A08E;">Putting together ingredients and steps</p>
+              <p class="font-bold" style="color:#6B3A1F;">{{ t('detail_loading_title') }}</p>
+              <p class="text-sm mt-1" style="color:#B8A08E;">{{ t('detail_loading_sub') }}</p>
             </div>
             <div v-else-if="currentRecipe">
             <!-- Header -->
@@ -248,7 +262,7 @@
 
             <!-- Ingredients card -->
             <div class="rounded-3xl p-4 md:p-6 mb-4" style="background:white; box-shadow:0 8px 32px rgba(107,58,31,0.06);">
-              <h3 class="font-bold mb-4" style="color:#6B3A1F;">🥘 Ingredients</h3>
+              <h3 class="font-bold mb-4" style="color:#6B3A1F;">{{ t('ingredients_section') }}</h3>
               <div v-if="currentRecipe.ingredients?.length" class="flex flex-wrap gap-2">
                 <span v-for="ing in currentRecipe.ingredients" :key="ing"
                   class="px-3 py-1.5 rounded-full text-sm font-medium"
@@ -264,24 +278,24 @@
                 </span>
               </div>
               <div class="flex gap-4 mt-3 text-xs">
-                <span style="color:#3A6B3A;">🟢 Have it</span>
-                <span style="color:#8B6914;">🟡 Need to buy</span>
+                <span style="color:#3A6B3A;">{{ t('have_it') }}</span>
+                <span style="color:#8B6914;">{{ t('need_to_buy_tag') }}</span>
               </div>
             </div>
 
             <!-- Nutrition card with mini chart -->
             <div class="rounded-3xl p-4 md:p-6 mb-4 md:mb-6" style="background:white; box-shadow:0 8px 32px rgba(107,58,31,0.06);">
-              <h3 class="font-bold mb-4" style="color:#6B3A1F;">📊 Nutrition</h3>
+              <h3 class="font-bold mb-4" style="color:#6B3A1F;">{{ t('nutrition_section') }}</h3>
               <div class="flex items-start gap-6 flex-wrap">
                 <div style="width:130px; height:130px;">
                   <canvas :ref="el => { if(el) nutritionChartRef = el; }" width="130" height="130"></canvas>
                 </div>
                 <div class="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
-                  <div><span class="font-semibold">🔥 Calories</span> <span style="color:#6B3A1F;">{{ n('calories') || 0 }} kcal</span></div>
-                  <div><span class="font-semibold">🥩 Protein</span> <span style="color:#D4745C;">{{ n('protein') || 0 }}g</span></div>
-                  <div><span class="font-semibold">🌾 Carbs</span> <span style="color:#D4A574;">{{ n('carbs') || 0 }}g</span></div>
-                  <div><span class="font-semibold">🧈 Fat</span> <span style="color:#B8A08E;">{{ n('fat') || 0 }}g</span></div>
-                  <div><span class="font-semibold">🌿 Fiber</span> <span style="color:#6B8B3A;">{{ n('fiber') || 0 }}g</span></div>
+                  <div><span class="font-semibold">🔥 Calories</span> <span style="color:#6B3A1F;">{{ t('cal', { v: n('calories') || 0 }) }}</span></div>
+                  <div><span class="font-semibold">🥩 Protein</span> <span style="color:#D4745C;">{{ t('protein', { v: n('protein') || 0 }) }}</span></div>
+                  <div><span class="font-semibold">🌾 Carbs</span> <span style="color:#D4A574;">{{ t('carbs', { v: n('carbs') || 0 }) }}</span></div>
+                  <div><span class="font-semibold">🧈 Fat</span> <span style="color:#B8A08E;">{{ t('fat', { v: n('fat') || 0 }) }}</span></div>
+                  <div><span class="font-semibold">🌿 Fiber</span> <span style="color:#6B8B3A;">{{ t('fiber', { v: n('fiber') || 0 }) }}</span></div>
                 </div>
               </div>
             </div>
@@ -289,8 +303,8 @@
             <!-- Missing Ingredients -->
             <div v-if="currentRecipe.missing_ingredients?.length" class="rounded-3xl p-4 md:p-6 mb-4" style="background:white; box-shadow:0 8px 32px rgba(107,58,31,0.06);">
               <div class="flex items-center justify-between mb-3">
-                <h3 class="font-bold" style="color:#6B3A1F;">🛒 Missing Ingredients</h3>
-                <button @click="adjustForMissing" class="text-xs px-4 py-2 rounded-xl font-bold" style="background:#D4A574; color:white;">✨ Adjust recipe</button>
+                <h3 class="font-bold" style="color:#6B3A1F;">{{ t('missing_title') }}</h3>
+                <button @click="adjustForMissing" class="text-xs px-4 py-2 rounded-xl font-bold" style="background:#D4A574; color:white;">{{ t('adjust_button') }}</button>
               </div>
               <div class="flex flex-wrap gap-2">
                 <span v-for="m in currentRecipe.missing_ingredients" :key="m"
@@ -300,12 +314,12 @@
                   {{ m }}
                 </span>
               </div>
-              <p class="text-xs mt-2" style="color:#B8A08E;">Tap ingredients you don't have so AI can adjust</p>
+              <p class="text-xs mt-2" style="color:#B8A08E;">{{ t('missing_hint') }}</p>
             </div>
 
             <!-- Prep Steps -->
             <div v-if="currentRecipe.prep_steps?.length" class="rounded-3xl p-4 md:p-6 mb-4" style="background:white; box-shadow:0 8px 32px rgba(107,58,31,0.06);">
-              <h3 class="font-bold mb-4 text-base md:text-lg" style="color:#6B3A1F;">📋 Prep Steps</h3>
+              <h3 class="font-bold mb-4 text-base md:text-lg" style="color:#6B3A1F;">{{ t('prep_title') }}</h3>
               <div class="space-y-4">
                 <div v-for="step in currentRecipe.prep_steps" :key="step._uid"
                   class="flex items-start gap-4 p-5 md:p-6 rounded-2xl transition-all duration-300 shadow-sm"
@@ -317,9 +331,9 @@
                   <div v-if="step.timer > 0" class="flex items-center gap-2 shrink-0">
                     <span class="text-sm font-bold" style="color:#8B6914;">⏱️ {{ formatTimer(timers[step._uid]) }}</span>
                     <button v-if="!timers[step._uid]?._running" @click="startTimer(step._uid, step.timer)"
-                      class="px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm" style="background:#6B3A1F; color:white;">Start</button>
+                      class="px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm" style="background:#6B3A1F; color:white;">{{ t('timer_start') }}</button>
                     <button v-else @click="stopTimer(step._uid)"
-                      class="px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm" style="background:#D4745C; color:white;">Stop</button>
+                      class="px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm" style="background:#D4745C; color:white;">{{ t('timer_stop') }}</button>
                   </div>
                 </div>
               </div>
@@ -327,7 +341,7 @@
 
             <!-- Cook Steps -->
             <div class="rounded-3xl p-4 md:p-6 mb-4 md:mb-6" style="background:white; box-shadow:0 8px 32px rgba(107,58,31,0.06);">
-              <h3 class="font-bold mb-4 text-base md:text-lg" style="color:#6B3A1F;">👨‍🍳 Cook Steps</h3>
+              <h3 class="font-bold mb-4 text-base md:text-lg" style="color:#6B3A1F;">{{ t('cook_title') }}</h3>
               <div class="space-y-4">
                 <div v-for="step in currentRecipe.cook_steps" :key="step._uid"
                   class="flex items-start gap-4 p-5 md:p-6 rounded-2xl transition-all duration-300 shadow-sm"
@@ -339,33 +353,33 @@
                   <div v-if="step.timer > 0" class="flex items-center gap-2 shrink-0">
                     <span class="text-sm font-bold" style="color:#8B6914;">⏱️ {{ formatTimer(timers[step._uid]) }}</span>
                     <button v-if="!timers[step._uid]?._running" @click="startTimer(step._uid, step.timer)"
-                      class="px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm" style="background:#6B3A1F; color:white;">Start</button>
+                      class="px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm" style="background:#6B3A1F; color:white;">{{ t('timer_start') }}</button>
                     <button v-else @click="stopTimer(step._uid)"
-                      class="px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm" style="background:#D4745C; color:white;">Stop</button>
+                      class="px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm" style="background:#D4745C; color:white;">{{ t('timer_stop') }}</button>
                   </div>
                 </div>
-                <div v-if="!currentRecipe.cook_steps?.length" class="text-sm text-center py-4" style="color:#B8A08E;">No cooking steps</div>
+                <div v-if="!currentRecipe.cook_steps?.length" class="text-sm text-center py-4" style="color:#B8A08E;">{{ t('no_cook_steps') }}</div>
               </div>
             </div>
 
             <!-- Note + Save -->
             <div class="rounded-3xl p-4 md:p-6 mb-4 md:mb-6" style="background:white; box-shadow:0 8px 32px rgba(107,58,31,0.06);">
-              <h3 class="font-semibold mb-3" style="color:#6B3A1F;">📝 Personal Note</h3>
+              <h3 class="font-semibold mb-3" style="color:#6B3A1F;">{{ t('note_title') }}</h3>
               <textarea v-model="userNote"
                 class="w-full px-4 py-3 rounded-xl border-none outline-none text-sm resize-none"
-                style="background:#FDF5E6;" rows="2" placeholder="Write anything you want to remember..."></textarea>
+                style="background:#FDF5E6;" rows="2" :placeholder="t('note_placeholder')"></textarea>
             </div>
 
             <!-- Image upload -->
             <div class="rounded-3xl p-4 md:p-6 mb-4 md:mb-6" style="background:white; box-shadow:0 8px 32px rgba(107,58,31,0.06);">
-              <h3 class="font-semibold mb-3" style="color:#6B3A1F;">📸 Take a Photo</h3>
+              <h3 class="font-semibold mb-3" style="color:#6B3A1F;">{{ t('photo_title') }}</h3>
               <div class="flex items-center gap-4">
                 <label class="cursor-pointer px-6 py-3 rounded-xl font-bold text-sm transition-all hover:scale-105 inline-block"
                   style="background:#D4A574; color:white;">
-                  📷 Choose Photo
+                  {{ t('photo_button') }}
                   <input type="file" accept="image/*" capture="environment" @change="handleImageUpload" class="hidden">
                 </label>
-                <span v-if="imagePreview" class="text-sm" style="color:#3A6B3A;">✅ Photo ready!</span>
+                <span v-if="imagePreview" class="text-sm" style="color:#3A6B3A;">{{ t('photo_ready') }}</span>
               </div>
               <img v-if="imagePreview" :src="imagePreview" class="mt-3 w-32 h-32 object-cover rounded-2xl">
             </div>
@@ -373,7 +387,7 @@
             <button @click="saveToGallery"
               class="w-full py-4 rounded-2xl font-bold text-lg transition-all duration-200 hover:scale-[1.02] active:scale-95"
               style="background:#6B3A1F; color:white; box-shadow:0 8px 24px rgba(107,58,31,0.3);">
-              🎉 Done! Save to Gallery
+              {{ t('save_button') }}
             </button>
             </div>
           </div>
@@ -381,12 +395,12 @@
 
         <!-- ── PAGE: GALLERY ── -->
         <div v-if="page === 'gallery'" key="gallery">
-          <h2 class="text-3xl font-bold mb-2" style="color:#6B3A1F;">🖼️ Food Gallery</h2>
-          <p class="text-sm mb-6" style="color:#8B6914;">All your saved recipes — {{ gallery.length }} items</p>
+          <h2 class="text-3xl font-bold mb-2" style="color:#6B3A1F;">{{ t('gallery_title') }}</h2>
+          <p class="text-sm mb-6" style="color:#8B6914;">{{ t('gallery_count', { n: gallery.length }) }}</p>
 
           <div v-if="!gallery.length" class="text-center py-16">
             <div class="text-6xl mb-4">🍽️</div>
-            <p style="color:#B8A08E;">No saved recipes yet. Time to cook!</p>
+            <p style="color:#B8A08E;">{{ t('gallery_empty') }}</p>
           </div>
 
           <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
@@ -406,7 +420,7 @@
                 <div class="mt-4 flex gap-2">
                   <button @click="cookAgain(item)"
                     class="flex-1 py-2 rounded-xl text-xs font-bold transition-all"
-                    style="background:#6B3A1F; color:white;">♨️ Cook Again</button>
+                    style="background:#6B3A1F; color:white;">{{ t('cook_again') }}</button>
                   <button @click="deleteFromGallery(item.id)"
                     class="px-4 py-2 rounded-xl text-xs font-bold transition-all"
                     style="background:#F5E6D3; color:#D4745C;">🗑️</button>
@@ -418,25 +432,25 @@
 
         <!-- ── PAGE: DASHBOARD ── -->
         <div v-if="page === 'dashboard'">
-          <h2 class="text-3xl font-bold mb-2" style="color:#6B3A1F;">📊 Cooking Dashboard</h2>
-          <p class="text-sm mb-6" style="color:#8B6914;">Your cooking stats at a glance</p>
+          <h2 class="text-3xl font-bold mb-2" style="color:#6B3A1F;">{{ t('dashboard_title') }}</h2>
+          <p class="text-sm mb-6" style="color:#8B6914;">{{ t('dashboard_subtitle') }}</p>
 
           <!-- Stats cards -->
           <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
             <div class="rounded-2xl p-5 text-center" style="background:white; box-shadow:0 4px 16px rgba(107,58,31,0.05);">
               <div class="text-3xl mb-1">🍽️</div>
               <div class="text-2xl font-bold" style="color:#6B3A1F;">{{ gallery.length }}</div>
-              <div class="text-xs" style="color:#8B6914;">Meals Cooked</div>
+              <div class="text-xs" style="color:#8B6914;">{{ t('meals_cooked') }}</div>
             </div>
             <div class="rounded-2xl p-5 text-center" style="background:white; box-shadow:0 4px 16px rgba(107,58,31,0.05);">
               <div class="text-3xl mb-1">🔥</div>
               <div class="text-2xl font-bold" style="color:#6B3A1F;">{{ avgCalories }}</div>
-              <div class="text-xs" style="color:#8B6914;">Avg Calories</div>
+              <div class="text-xs" style="color:#8B6914;">{{ t('avg_calories') }}</div>
             </div>
             <div class="rounded-2xl p-5 text-center" style="background:white; box-shadow:0 4px 16px rgba(107,58,31,0.05);">
               <div class="text-3xl mb-1">🥩</div>
               <div class="text-2xl font-bold" style="color:#6B3A1F;">{{ totalProtein }}g</div>
-              <div class="text-xs" style="color:#8B6914;">Total Protein</div>
+              <div class="text-xs" style="color:#8B6914;">{{ t('total_protein') }}</div>
             </div>
 
           </div>
@@ -444,11 +458,11 @@
           <!-- Charts -->
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
             <div class="rounded-3xl p-4 md:p-6" style="background:white; box-shadow:0 8px 32px rgba(107,58,31,0.06);">
-              <h3 class="font-bold mb-4 text-sm md:text-base" style="color:#6B3A1F;">📊 Avg Nutrition Distribution</h3>
+              <h3 class="font-bold mb-4 text-sm md:text-base" style="color:#6B3A1F;">{{ t('avg_nutrition') }}</h3>
               <div style="max-width:320px; margin:0 auto;"><canvas id="doughnutChart"></canvas></div>
             </div>
             <div class="rounded-3xl p-6" style="background:white; box-shadow:0 8px 32px rgba(107,58,31,0.06);">
-              <h3 class="font-bold mb-4" style="color:#6B3A1F;">📈 Calories per Meal</h3>
+              <h3 class="font-bold mb-4" style="color:#6B3A1F;">{{ t('calories_per_meal') }}</h3>
               <div style="height:260px;"><canvas id="barChart"></canvas></div>
             </div>
           </div>
@@ -474,10 +488,10 @@
         <div class="flex gap-3 justify-center">
           <button @click="confirmAnswer(true)"
             class="px-8 py-2.5 rounded-xl font-bold text-sm transition-all hover:scale-105"
-            style="background:#6B3A1F; color:white;">Yes</button>
+            style="background:#6B3A1F; color:white;">{{ t('confirm_yes') }}</button>
           <button @click="confirmAnswer(false)"
             class="px-8 py-2.5 rounded-xl font-bold text-sm transition-all"
-            style="background:#F5E6D3; color:#6B3A1F;">No</button>
+            style="background:#F5E6D3; color:#6B3A1F;">{{ t('confirm_no') }}</button>
         </div>
       </div>
     </div>
@@ -504,12 +518,12 @@
                 {{ msg.content }}
               </div>
             </div>
-            <div v-if="chatLoading" class="text-xs" style="color:#B8A08E;">Typing...</div>
+            <div v-if="chatLoading" class="text-xs" style="color:#B8A08E;">{{ t('chat_typing') }}</div>
           </div>
           <div class="flex gap-2 p-3 border-t" style="border-color:#F5E6D3;">
             <input v-model="chatInput" @keyup.enter="sendChat"
               class="flex-1 px-3 py-2 rounded-xl text-sm border-none outline-none"
-              style="background:#FDF5E6;" placeholder="Ask Bingus...">
+              style="background:#FDF5E6;" :placeholder="t('chat_placeholder')">
             <button @click="sendChat"
               class="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold"
               style="background:#6B3A1F; color:white;">➤</button>
@@ -534,13 +548,130 @@
     setup() {
       const BASE = '';
 
+      // ── i18n ──
+      const locale = ref(localStorage.getItem('bingus_locale') || 'en');
+      const translations = {
+        nav_kitchen: { en:'Your Kitchen', th:'ตั้งค่าห้องครัว' },
+        nav_cooking: { en:'Cooking Now', th:'ทำอาหาร' },
+        nav_gallery: { en:'Food Gallery', th:'แกลเลอรี่' },
+        nav_dashboard: { en:'Dashboard', th:'สถิติ' },
+        kitchen_title: { en:'🏠 Kitchen Setup', th:'🏠 ตั้งค่าห้องครัว' },
+        kitchen_subtitle: { en:'Tell Bingus what you have in your kitchen!', th:'บอกบิงกัสว่ามีอะไรในครัวบ้าง!' },
+        tools_title: { en:'🔪 Tools', th:'🔪 อุปกรณ์ที่มี' },
+        tools_empty: { en:'No tools yet — add some!', th:'ยังไม่มีอุปกรณ์ เพิ่มเลย!' },
+        tools_placeholder: { en:'Type a tool...', th:'พิมพ์ชื่ออุปกรณ์...' },
+        tools_add: { en:'+ Add', th:'+ เพิ่ม' },
+        pantry_title: { en:'🧂 Pantry', th:'🧂 วัตถุดิบติดครัว' },
+        pantry_placeholder: { en:'Type an ingredient...', th:'พิมพ์ชื่อวัตถุดิบ...' },
+        pantry_add: { en:'+ Add', th:'+ เพิ่ม' },
+        cooking_title: { en:'🍳 What to cook today?', th:'🍳 มื้อนี้กินอะไรดี?' },
+        cooking_subtitle: { en:'Pick your ingredients + cooking method!', th:'เลือกวัตถุดิบที่มี + บอกวิธีทำที่อยากได้!' },
+        ingredients_title: { en:'🧂 Your Ingredients', th:'🧂 วัตถุดิบที่มี' },
+        ingredients_empty: { en:'No ingredients in your kitchen yet — set up your kitchen first!', th:'ยังไม่มีวัตถุดิบในห้องครัว ไปตั้งค่าก่อน!' },
+        ingredients_placeholder: { en:'Extra ingredients you have (e.g. 200g chicken, 3 eggs)...', th:'วัตถุดิบอื่นที่มี (เช่น ไก่ 200g, ไข่ 3 ฟอง)...' },
+        method_title: { en:'🔥 How to cook?', th:'🔥 อยากกินแบบไหน?' },
+        method_hint: { en:'🐾 Options are filtered by your kitchen equipment', th:'🐾 ตัวเลือกนี้มีตามอุปกรณ์ที่ตั้งไว้ในห้องครัวนะ' },
+        method_empty: { en:'No equipment — set up your kitchen first!', th:'ยังไม่มีอุปกรณ์ ไปตั้งค่าห้องครัวก่อน!' },
+        notes_title: { en:'📝 Notes (optional)', th:'📝 หมายเหตุ (ไม่บังคับ)' },
+        notes_placeholder: { en:'e.g. Not too spicy, quick meal...', th:'เช่น ไม่เผ็ดมาก ทำง่าย...' },
+        suggest_button: { en:'✨ Let Bingus Chef suggest!', th:'✨ ให้ Bingus Chef แนะนำ!' },
+        suggestions_title: { en:'🍽️ Suggestions', th:'🍽️ แนะนำเมนู' },
+        suggestions_count: { en:"Bingus found {n} dishes you can make! Pick one.", th:"บิงกัสแนะนำ {n} เมนูจากของที่มี! กดเลือกเลย" },
+        suggestions_loading_title: { en:'Bingus is thinking...', th:'บิงกัสกำลังคิดเมนูให้...' },
+        suggestions_loading_sub: { en:'Picking dishes that match your tools and ingredients', th:'เดี๋ยวนะ~ กำลังเลือกเมนูที่ใช้อุปกรณ์ที่มี' },
+        ingredients_needed: { en:'🧂 Ingredients needed', th:'🧂 วัตถุดิบที่ต้องใช้' },
+        need_to_buy: { en:'🛒 Need to buy: {items}', th:'🛒 ต้องซื้อ: {items}' },
+        go_button: { en:'✅ Go! See recipe for {name}', th:'✅ เลย! ดูวิธีทำ {name}' },
+        detail_loading_title: { en:'Bingus is writing the recipe...', th:'บิงกัสกำลังเขียนสูตร...' },
+        detail_loading_sub: { en:'Putting together ingredients and steps', th:'กำลังคิดวัตถุดิบและขั้นตอนให้นะ' },
+        ingredients_section: { en:'🥘 Ingredients', th:'🥘 วัตถุดิบ' },
+        have_it: { en:'🟢 Have it', th:'🟢 มีแล้ว' },
+        need_to_buy_tag: { en:'🟡 Need to buy', th:'🟡 ต้องซื้อเพิ่ม' },
+        nutrition_section: { en:'📊 Nutrition', th:'📊 โภชนาการ' },
+        cal: { en:'{v} kcal', th:'{v} kcal' },
+        protein: { en:'{v}g', th:'{v}g' },
+        carbs: { en:'{v}g', th:'{v}g' },
+        fat: { en:'{v}g', th:'{v}g' },
+        fiber: { en:'{v}g', th:'{v}g' },
+        missing_title: { en:'🛒 Missing Ingredients', th:'🛒 วัตถุดิบที่ต้องซื้อเพิ่ม' },
+        adjust_button: { en:'✨ Adjust recipe', th:'✨ ปรับสูตรตามที่มี' },
+        missing_hint: { en:'Tap ingredients you don\'t have so AI can adjust', th:'แตะวัตถุดิบที่ไม่มีเพื่อให้ AI ปรับสูตร' },
+        prep_title: { en:'📋 Prep Steps', th:'📋 เตรียมวัตถุดิบ' },
+        cook_title: { en:'👨‍🍳 Cook Steps', th:'👨‍🍳 ขั้นตอนการทำ' },
+        no_cook_steps: { en:'No cooking steps', th:'ไม่มีขั้นตอนการทำอาหาร' },
+        timer_start: { en:'Start', th:'เริ่ม' },
+        timer_stop: { en:'Stop', th:'หยุด' },
+        note_title: { en:'📝 Personal Note', th:'📝 โน้ตส่วนตัว' },
+        note_placeholder: { en:'Write anything you want to remember...', th:'จดอะไรก็ได้ที่อยากจำ...' },
+        photo_title: { en:'📸 Take a Photo', th:'📸 ถ่ายรูปอาหาร' },
+        photo_button: { en:'📷 Choose Photo', th:'📷 เลือกรูป' },
+        photo_ready: { en:'✅ Photo ready!', th:'✅ มีรูปแล้ว!' },
+        save_button: { en:'🎉 Done! Save to Gallery', th:'🎉 ทำเสร็จแล้ว! เก็บลง Gallery เลย!' },
+        gallery_title: { en:'🖼️ Food Gallery', th:'🖼️ แกลเลอรี่อาหาร' },
+        gallery_count: { en:'All your saved recipes — {n} items', th:'เมนูที่เคยทำทั้งหมด {n} รายการ' },
+        gallery_empty: { en:'No saved recipes yet. Time to cook!', th:'ยังไม่มีเมนูที่บันทึกไว้ ไปทำอาหารกัน!' },
+        cook_again: { en:'♨️ Cook Again', th:'♨️ ทำอีก' },
+        dashboard_title: { en:'📊 Cooking Dashboard', th:'📊 สถิติการทำอาหาร' },
+        dashboard_subtitle: { en:'Your cooking stats at a glance', th:'ดูภาพรวมการทำอาหารของคุณ' },
+        meals_cooked: { en:'Meals Cooked', th:'เมนูที่ทำ' },
+        avg_calories: { en:'Avg Calories', th:'แคลเฉลี่ย' },
+        total_protein: { en:'Total Protein', th:'โปรตีนรวม' },
+        avg_nutrition: { en:'📊 Avg Nutrition Distribution', th:'📊 สัดส่วนสารอาหารเฉลี่ย' },
+        calories_per_meal: { en:'📈 Calories per Meal', th:'📈 แคลอรี่แต่ละเมนู' },
+        no_data: { en:'No data yet', th:'ยังไม่มีข้อมูล' },
+        cal_label: { en:'Calories', th:'แคลอรี่' },
+        chat_typing: { en:'Typing...', th:'กำลังพิมพ์...' },
+        chat_placeholder: { en:'Ask Bingus...', th:'ถามบิงกัส...' },
+        chat_greeting: { en:'Meow! Bingus is ready to help you cook! 🐾', th:'เหมียว! บิงกัสพร้อมช่วยทำอาหารแล้ว 🐾' },
+        chat_error: { en:'Meow! Sorry, system error 🐾', th:'เหมียว! บิงกัสขอโทษ ระบบมีปัญหา 🐾' },
+        chat_fallback: { en:'Meow?', th:'เหมียว?' },
+        step_done: { en:'Done!', th:'เสร็จแล้ว!' },
+        confirm_yes: { en:'Yes', th:'ใช่เลย' },
+        confirm_no: { en:'No', th:'ยังไม่' },
+        delete_confirm: { en:'Delete this recipe? 🥺', th:'ลบเมนูนี้ทิ้งเลยเหรอ? 🥺' },
+        deleted: { en:'Deleted!', th:'ลบแล้วนะ' },
+        saved_toast: { en:'🎉 Saved {name} to Gallery!', th:'🎉 บันทึก {name} ลงแกลเลอรี่แล้ว!' },
+        timer_toast: { en:"⏰ Time's up! Step {n}", th:'⏰ เวลาครบแล้ว! ขั้นตอนที่ {n}' },
+        select_ingredients_first: { en:'Select ingredients first!', th:'เลือกวัตถุดิบก่อนน้าา' },
+        select_missing_first: { en:'Select missing ingredients first', th:'เลือกวัตถุดิบที่ไม่มีก่อน' },
+        adjusting: { en:'Adjusting recipe...', th:'กำลังปรับสูตรตามที่มี...' },
+        adjusted: { en:'Recipe adjusted! Check new ingredients', th:'ปรับสูตรแล้ว! ดูวัตถุดิบที่ต้องใช้ใหม่' },
+        adjust_error: { en:"Bingus couldn't adjust, try again", th:'บิงกัสปรับสูตรไม่ทัน ลองใหม่น้า' },
+        suggest_error: { en:"Bingus couldn't think of anything, try again", th:'บิงกัสคิดไม่ออก ลองใหม่อีกทีน้า' },
+        detail_error: { en:"Bingus couldn't find a recipe, try again", th:'บิงกัสหาสูตรไม่เจอ ลองใหม่อีกครั้ง' },
+        // Cooking method labels
+        method_Stirfry: { en:'Stir-fry', th:'ผัด' },
+        method_Deepfry: { en:'Deep-fry', th:'ทอด' },
+        method_Boil: { en:'Boil', th:'ต้ม' },
+        method_Curry: { en:'Curry', th:'แกง' },
+        method_Stew: { en:'Stew', th:'ตุ๋น' },
+        method_Steam: { en:'Steam', th:'นึ่ง' },
+        method_Grill: { en:'Grill', th:'ย่าง' },
+        method_Bake: { en:'Bake', th:'อบ' },
+        method_Roast: { en:'Roast', th:'ปิ้ง' },
+        method_Panfry: { en:'Pan-fry', th:'จี่' },
+        method_Sousvide: { en:'Sous-vide', th:'ซูวี' },
+      };
+      function t(key, vars = {}) {
+        let s = translations[key]?.[locale.value];
+        if (!s) s = translations[key]?.en || key;
+        for (const [k, v] of Object.entries(vars)) s = s.replace('{'+k+'}', v);
+        return s;
+      }
+      function toggleLocale() {
+        locale.value = locale.value === 'en' ? 'th' : 'en';
+        localStorage.setItem('bingus_locale', locale.value);
+      }
+      const methodLabel = (m) => t('method_' + m.replace(/[^a-z0-9]/gi, ''), {});
+
       // ── Navigation ──
-      const navItems = [
+      const navItems = computed(() => [
+        { id: 'kitchen', label: t('nav_kitchen'), icon: '🏠' },
         { id: 'kitchen', label: 'Your Kitchen', icon: '🏠' },
         { id: 'cooking', label: 'Cooking Now', icon: '🍳' },
         { id: 'gallery', label: 'Food Gallery', icon: '🖼️' },
-        { id: 'dashboard', label: 'Dashboard', icon: '📊' },
-      ];
+        { id: 'dashboard', label: t('nav_dashboard'), icon: '📊' },
+      ]);
       const page = ref('cooking');
 
       function navigateTo(id) {
@@ -649,9 +780,9 @@
       }
       async function adjustForMissing() {
         const unavailable = missingChecked.value;
-        if (!unavailable.length) { showToast('Select missing ingredients first', 'warn', '🐾'); return; }
+        if (!unavailable.length) { showToast(t('select_missing_first'), 'warn', '🐾'); return; }
         const r = currentRecipe.value;
-        showToast('Adjusting recipe...', 'warn', '🔄');
+        showToast(t('adjusting'), 'warn', '🔄');
         try {
           const res = await fetch(BASE + '/detail', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -672,7 +803,7 @@
           data.missing_ingredients = data.missing_ingredients || [];
           currentRecipe.value = data;
           missingChecked.value = [];
-          showToast('Recipe adjusted! Check new ingredients', 'success', '✅');
+          showToast(t('adjusted'), 'success', '✅');
           nextTick(() => {
             drawNutritionChart();
             updateBingusContext();
@@ -680,7 +811,7 @@
           timers.value = {};
           data.steps.forEach(s => { timers.value[s._uid] = { remaining: s.timer * 60 || 0, _running: false }; });
         } catch (e) {
-          showToast('Bingus couldn\'t adjust, try again', 'error', '😿');
+          showToast(t('adjust_error'), 'error', '😿');
         }
       }
       const nutritionChartRef = ref(null);
@@ -721,7 +852,7 @@
 
       async function getSuggestions() {
         if (!getAllIngredients() && !extraIngredients.value.trim()) {
-          showToast('Select ingredients first!', 'warn', '🐾');
+          showToast(t('select_ingredients_first'), 'warn', '🐾');
           return;
         }
         suggestLoading.value = true;
@@ -740,7 +871,7 @@
           suggestions.value = (data.suggestions || []).slice(0, 5);
           cookingStep.value = 'suggestions';
         } catch (e) {
-          showToast('Bingus couldn\'t think of anything, try again', 'error', '😿');
+          showToast(t('suggest_error'), 'error', '😿');
         } finally {
           suggestLoading.value = false;
         }
@@ -796,7 +927,7 @@
           });
         } catch (e) {
           detailLoading.value = false;
-          showToast('Bingus couldn\'t find a recipe, try again', 'error', '😿');
+          showToast(t('detail_error'), 'error', '😿');
         }
       }
 
@@ -850,7 +981,7 @@
                   audio.play();
                 } catch {}
                 const stepNum = currentRecipe.value?.steps?.findIndex(s => s._uid === k);
-                showToast('⏰ Time\'s up! Step ' + ((stepNum ?? -1) + 1), 'warn', '⏰');
+                showToast(t('timer_toast', { n: (stepNum ?? -1) + 1 }), 'warn', '⏰');
               }
             }
           });
@@ -927,7 +1058,7 @@
         const local = loadGalleryFromLocal();
         local.unshift(newEntry);
         saveGalleryToLocal(local);
-        showToast('🎉 Saved ' + currentRecipe.value.name + ' to Gallery!', 'success', '🎉');
+        showToast(t('saved_toast', { name: currentRecipe.value.name }), 'success', '🎉');
         await loadGallery();
         // navigate to gallery
         page.value = 'gallery';
@@ -946,13 +1077,13 @@
       }
 
       async function deleteFromGallery(id) {
-        const ok = await showConfirm('Delete this recipe? 🥺');
+        const ok = await showConfirm(t('delete_confirm'));
         if (!ok) return;
         await fetch(BASE + '/gallery/' + id, { method: 'DELETE' });
         // also remove from local
         const local = loadGalleryFromLocal().filter(e => e.id !== id);
         saveGalleryToLocal(local);
-        showToast('Deleted!', 'warn', '🗑️');
+        showToast(t('deleted'), 'warn', '🗑️');
         loadGallery();
       }
 
@@ -1048,7 +1179,7 @@
       // ── Bingus Chat ──
       const showChat = ref(false);
       const chatMessages = ref([
-        { role: 'assistant', content: 'Meow! Bingus is ready to help you cook! 🐾' }
+        { role: 'assistant', content: t('chat_greeting') }
       ]);
       const chatInput = ref('');
       const chatLoading = ref(false);
@@ -1059,7 +1190,7 @@
         if (currentRecipe.value) {
           const all = currentRecipe.value.steps || [];
           const doneSteps = all.filter(s => s._done).length;
-          const currentStep = all[doneSteps]?.text || 'Done!';
+          const currentStep = all[doneSteps]?.text || t('step_done');
           chatContext.value = {
             recipe_name: currentRecipe.value.name,
             current_step: currentStep
@@ -1082,9 +1213,9 @@
             })
           });
           const data = await res.json();
-          chatMessages.value.push({ role: 'assistant', content: data.reply || 'Meow?' });
+          chatMessages.value.push({ role: 'assistant', content: data.reply || t('chat_fallback') });
         } catch {
-          chatMessages.value.push({ role: 'assistant', content: 'Meow! Sorry, system error 🐾' });
+          chatMessages.value.push({ role: 'assistant', content: t('chat_error') });
         }
         chatLoading.value = false;
         nextTick(() => {
@@ -1100,6 +1231,7 @@
       });
 
       return {
+        locale, toggleLocale, methodLabel, t,
         navItems, page, navigateTo,
         tools, pantry, presetPantry, newTool, newPantry, addTool, addPantry, removePantry, loadKitchen, saveKitchen,
         availableMethods, cookingStep, selectedIngredients, extraIngredients, cookingMethod, cookingNotes,
