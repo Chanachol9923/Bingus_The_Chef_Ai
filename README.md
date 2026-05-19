@@ -43,8 +43,15 @@ cd Bingus_The_Chef_Ai
 pip install -r requirements.txt
 ```
 
-### 3. Run the server
+### 3. Set API key
 ```bash
+# Create .env file with your Typhoon API key
+echo "TYPHOON_API_KEY=sk-your-key-here" > .env
+```
+
+### 4. Run the server
+```bash
+# Loads TYPHOON_API_KEY from .env automatically
 python main.py
 ```
 
@@ -68,7 +75,7 @@ npm i -g vercel
 vercel --prod
 ```
 
-Set environment variable `TYPHOON_API_KEY` (optional — a default key is bundled for demo).
+Set environment variable `TYPHOON_API_KEY` (see [Setup](#2-install-dependencies) above).
 
 **Note:** Gallery / Kitchen data is stored in SQLite (`/tmp`) which is ephemeral on Vercel serverless. Data is backed up in browser's localStorage.
 

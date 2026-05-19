@@ -12,10 +12,10 @@ app = FastAPI()
 
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
-client = OpenAI(
-    api_key=os.getenv("TYPHOON_API_KEY", "YOUR_TYPHOON_API_KEY_HERE"),
-    base_url="https://api.opentyphoon.ai/v1"
-)
+api_key = os.getenv("TYPHOON_API_KEY")
+if not api_key:
+    raise RuntimeError("TYPHOON_API_KEY environment variable is not set")
+client = OpenAI(api_key=api_key, base_url="https://api.opentyphoon.ai/v1")
 
 UPLOAD_DIR = Path(os.getenv("BINGUS_UPLOAD_DIR", "uploads"))
 UPLOAD_DIR.mkdir(exist_ok=True)

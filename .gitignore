@@ -6,5 +6,6 @@ uploads/*
 !.gitkeep
 .venv/
 venv/
+.env
 School_Project/
 BingusChefPresent.mov
